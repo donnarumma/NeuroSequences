@@ -1,0 +1,8 @@
+/debug/
+/legacy/
+/.codex/
+/.codex
+/.agents/
+/.agents
+/.gitrepo/
+*.asv
