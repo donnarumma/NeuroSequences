@@ -1,202 +1,224 @@
-# Sequence Simulations and Modelling
+# NeuroSequences
 
-This repository contains MATLAB simulations for sequence planning, working
-memory, and related control tasks. The active workflow now uses a generic
-pipeline for running batches, collecting trials, and producing sample and
-PCA plots.
+MATLAB repository for sequence-memory model simulations and companion figure-generation scripts.
 
-## Setup
+The active `MAIN_*_Exp.m` entry points implement model simulations inspired by the framework described in the BioRxiv preprint:
 
-1. Clone and add to the MATLAB path:
+- https://www.biorxiv.org/content/10.1101/2025.11.26.690672v1
 
-   - `https://github.com/donnarumma/HAI_LANGUAGE`
-   - `https://github.com/donnarumma/TrialBox`
+These simulations are configured from experimental tasks reported in:
 
-2. Add this repository to the MATLAB path.
+- `Chen` mains: Chen et al., Neuron (2024)
+  - https://www.cell.com/neuron/fulltext/S0896-6273(24)00569-5
+- `Mushiake` main: Mushiake et al., Neuron (2006)
+  - https://www.cell.com/neuron/fulltext/S0896-6273(06)00272-8
+- `Xie` main: Xie et al., Science (2022)
+  - https://www.science.org/doi/10.1126/science.abm0204
 
-3. Make sure the helper functions used by the experiments are visible on
-   the path as well.
+## Repository Roles
 
-## Active Main Scripts
+This repository contains two different kinds of scripts.
 
-These are the main scripts currently maintained in the generic workflow.
+### 1. Model simulations
 
-- `Chen/MAIN_Chen01_Forward.m`
-  Runs the Chen01 variable-length sequence experiment in the forward-only
-  setting. It includes 3D, 2D, and 1D sequence families, collects trial
-  results, generates example sample plots with `SAMPLE_Sequence`, and runs
-  PCA summaries with `BETA_pca`.
+These are the maintained entry points for running batches, collecting trial results, building readouts, and generating sample and PCA plots.
 
-- `Chen/MAIN_Chen01_Backward.m`
-  Runs the Chen01 variable-length sequence experiment in the backward-only
-  setting. It is the backward counterpart of the forward main and follows
-  the same generic execution and plotting pipeline.
+- `Chen/MAIN_Chen01_S1S2S3_Forward_Exp.m`
+  - Chen01 forward-only simulation across 1D, 2D, and 3D sequence families.
+- `Chen/MAIN_Chen01_S1S2S3_Backward_Exp.m`
+  - Chen01 backward-only simulation across 1D, 2D, and 3D sequence families.
+- `Chen/MAIN_Chen01_S1S2S3_Sensors_Exp.m`
+  - Chen01 sensory / neutral control branch using preprocessed sensor readouts.
+- `Chen/MAIN_Chen02_S2_FwBw_Exp.m`
+  - Chen02 2D forward/backward simulation with explicit policy-type priors.
+- `Xie/MAIN_Xie_S3_Forward_Exp.m`
+  - Xie-style 3D forward-only simulation.
+- `Mushiake/MAIN_Mushiake_Exp.m`
+  - Mushiake AY maze branch using the sensor runner and a custom trial/readout path.
 
-- `Chen/MAIN_Chen02_FwBw.m`
-  Runs the Chen02 fixed-length 2D experiment with both forward and
-  backward policies enabled. This main also supports explicit policy-type
-  priors, for example to favour forward policies over backward ones.
+### 2. Figure-only reproductions
 
-- `Chen/MAIN_Chen01_Sensors.m`
-  Runs the sensor/neutral control experiment using the generic plotting
-  tools where possible, while keeping the dedicated `run_sensors`
-  execution path for this model family.
+These scripts are not model simulations. They are used to print or sketch figure layouts that resemble published data figures.
 
-## Generic Simulation Pipeline
+- `Chen/chenForward.m`
+- `Chen/chenBackward.m`
+- `Chen/chenSensory.m`
+- `Xie/xie.m`
 
-### Batch execution
+They are useful for figure reproduction, but they are not part of the generative-model simulation pipeline.
 
-The generic sequence batch runner is:
+## Current Simulation Pipeline
 
-`engine/run_sequence.m`
+The maintained `MAIN_*_Exp.m` scripts follow a common structure.
 
-This is the reference implementation for the current Chen/Xie-style
-sequence simulations. It is the main entry point for executing one trial
-once the static generative model has already been built.
+### 1. Batch configuration
 
-Reference point for this formulation:
+Sequence experiments start from:
 
-- `https://www.biorxiv.org/content/10.1101/2025.11.26.690672v1`
-
-### Static model construction
-
-The shared model for all trials in a batch is built by:
-
+- `pms/run_sequenceParams.m`
 - `engine/build_sequence_model.m`
+- `utilites/build_batch_description.m`
 
-This function constructs:
+Sensor-style experiments start from:
 
-- the admissible temporal-order types such as `fw` and `bw`
-- the active sequence families such as `3D`, `2D`, and `1D`
-- the hidden-state transition matrices `B`
-- the likelihood matrices `A`
-- the priors `D`
-- the policy matrix `V`
-- the task, state, and observation labels used later in execution and
-  plotting
+- `pms/run_sensorsParams.m`
+- `engine/run_sensors.m`
 
-### Trial execution
+### 2. Trial execution
 
-For each trial, the main script sets:
+Sequence-model batches are executed through:
 
-- `pms.iTrial`
-- `pms.irng`
-- `pms.trialDescription`
+- `engine/run_sequence.m`
 
-Then `run_sequence`:
+Sensor / control batches are executed through:
 
-- selects the corresponding task from the prebuilt `sequenceModel`
-- builds the initial hidden-state trajectory
-- builds preferences `C`
-- optionally builds a policy prior `E`
-- runs `VB_MDP_X`
-- saves the resulting `MDP` file
+- `engine/run_sensors.m`
 
-### Collection and post-processing
+The `Mushiake` branch uses the sensor runner with a custom trial runner:
 
-After a batch finishes, the workflow collects and validates the saved
-trials directly from the `MDP_*` files.
+- `utilites/run_mushiake_trial.m`
 
-Main collection entry points:
+### 3. Trial collection
+
+Collected trial summaries are rebuilt from saved `MDP_*` files through:
 
 - `utilites/Collect_Trial_Results.m`
 - `utilites/Collect_Sensor_Results.m`
 
-The generic post-hoc tools are:
+### 4. Readout construction
 
-- `plot/SAMPLE_Sequence.m`
-  Generates firing-rate and raster plots for selected trials.
+The preferred plotting-side loader is now:
 
-- `plot/BETA_pca.m`
-  Generates PCA summaries such as polygons, trajectories, and time plots.
+- `utilites/extract_sequence_trials.m`
 
-## Parameter Files
+This function prepares:
 
-The main parameter entry points are:
+- `PopRates`
+- `firingRates`
+- `Spikes`
+- `timePopRates`
+- `timeFiringRates`
+- `timeSpikes`
 
-- `pms/run_sequenceParams.m`
-  Default parameters for sequence batches and single-trial execution.
+and supports both:
 
-- `pms/run_sensorsParams.m`
-  Default parameters for the sensor experiment.
+- direct sequence readouts
+- preprocessed sensor / maze readouts via `usePreprocessedPopFR = true`
 
-- `pms/SAMPLE_SequenceParams.m`
-  Default parameters for sample firing-rate and raster plots.
+Its defaults are defined in:
 
-- `pms/BETA_pcaParams.m`
-  Default parameters for PCA analyses and PCA figure export.
+- `pms/extract_sequence_data_trialsParams.m`
 
-Each main script starts from one of these defaults and then overrides only
-the parameters that are specific to the experiment.
+### 5. Tuning and spike generation
 
-## Output Structure
+The maintained mains route readout configuration through:
 
-The current workflow writes results into deterministic batch folders under
-`~/TESTS/HAI_SEQUENCES/...`.
+- `utilites/getCosineTuning.m`
 
-For sequence experiments, a batch typically contains:
+The current tuning menu includes:
 
-- `sequenceModel.mat`
-- `trialSeeds.mat`
-- one `MDP_*` file per executed trial
-- one `Collect_*` summary file
-- sample figures and PCA figures if saving is enabled
+- no tuning
+- legacy `cosineTune`
+- `cosineTuningStep`
+- `cosineTuneCircularBlocks`
 
-Before executing a trial, the main script checks whether a matching file
-already exists. If so, the trial is reused instead of rerun. This makes it
-easy to resume interrupted batches.
+The circular-block implementation is:
 
-## Naming Scheme
+- `utilites/cosineTuneCircularBlocks.m`
+- `pms/cosineTuneCircularBlocksParams.m`
 
-The folder and file names are designed to encode the main simulation
-choices:
+Spike generation is centralized in:
 
-- experiment label
-- target set
-- active sequence families
-- forward/backward availability
-- policy count
-- optional policy-prior identifiers
+- `utilites/firingRatesToSpikes.m`
 
-For example, if a non-uniform type prior is used in a forward/backward
-experiment:
+Supported modes include:
 
-- `pms.policyTypeWeights = [10, 1]`
+- `legacy`
+- `legacy_logit_noise`
+- `thresholded_bernoulli`
+- `thresholded_refractory`
 
-then the generated names include a token such as:
+### 6. Plotting and geometry
 
-- `PTfw10_bw1`
+Sample-level plots use:
 
-This allows different prior settings to be stored in separate folders and
-matched again when reusing trials.
+- `plot/plot_sequence_firing_rate.m`
+- `plot/plot_sequence_raster.m`
 
-## Typical Usage
+Polar plots typically use:
 
-To run one of the maintained simulations, open MATLAB with the repository
-and dependencies on the path, then launch one of the main scripts, for
-example:
+- `plot/tileNeuronPolarByTypes.m`
+- `plot/plotNeuronPolarByCondition.m`
 
-- `Chen/MAIN_Chen01_Forward.m`
-- `Chen/MAIN_Chen01_Backward.m`
-- `Chen/MAIN_Chen02_FwBw.m`
-- `Chen/MAIN_Chen01_Sensors.m`
+PCA summaries use:
 
-Each script:
+- `plot/BETA_pcaSpace.m`
+- `pms/BETA_pcaSpaceParams.m`
 
-1. builds or reloads the batch configuration
-2. creates or reloads one seed per trial
-3. skips already-saved matching trials
-4. runs missing trials
-5. collects results
-6. optionally produces sample and PCA figures
+This is now the maintained PCA path for the sequence branches. It replaces the old `BETA_pca` workflow for the active Chen and Xie mains.
 
-## References
+## Important Branch-Specific Notes
 
-- Xie, Y. et al. (2022). *Geometry of sequence working memory in macaque
-  prefrontal cortex*. Science, 375(6581), 632-639.
+### Chen01 / Chen02 / Xie
 
-- Chen, J. et al. (2024). *Flexible control of sequence working memory in
-  the macaque frontal cortex*. Neuron, 112(20), 3502-3514.
+These branches use the generic sequence workflow:
 
-- Current sequence-runner reference point:
-  `https://www.biorxiv.org/content/10.1101/2025.11.26.690672v1`
+- `run_sequence`
+- `Collect_Trial_Results`
+- `extract_sequence_trials`
+- `plot_sequence_firing_rate`
+- `plot_sequence_raster`
+- `BETA_pcaSpace`
+
+### Chen01 Sensors
+
+The sensory branch is special because cosine-smoothed sensor readouts are already assembled upstream during sensor collection. In practice:
+
+- `Collect_Sensor_Results` rebuilds the sensor trial summaries
+- `extract_sequence_trials(..., usePreprocessedPopFR = true)` extends those preprocessed readouts for sample plots and PCA
+
+### Mushiake
+
+`MAIN_Mushiake_Exp.m` uses the sensor runner but a custom task and readout path:
+
+- `run_mushiake_trial`
+- `build_mushiake_trial_data`
+- `mushiake_apply_readout_preset`
+
+At the moment, the active path in `MAIN_Mushiake_Exp.m` focuses on trial execution, maze plotting, and sample plots. A legacy PCA block is still present after an early `return`, so it is not part of the active execution path.
+
+## External Dependencies
+
+The repository depends on:
+
+- `HAI_LANGUAGE`
+  - hierarchical active-inference utilities and HAI helper functions
+  - https://github.com/donnarumma/HAI_LANGUAGE
+- `TrialBox`
+  - parameter-resolution helper `resolveFunctionParams`
+  - https://github.com/donnarumma/TrialBox
+- `SPM`
+  - active-inference / MDP utilities used by the VB solvers
+  - https://www.fil.ion.ucl.ac.uk/spm/
+
+Make sure these dependencies are on the MATLAB path before running the mains.
+
+## Outputs
+
+Most simulations save results under:
+
+- `/TESTS/HAI_SEQUENCES/...`
+
+A typical batch contains:
+
+- `MDP_*` trial files
+- `Collect_*` summary files
+- sample firing-rate and raster PDFs / FIGs
+- PCA summary PDFs / FIGs
+
+The mains are written to reuse already existing trial files when possible, so interrupted batches can be resumed safely.
+
+## Related Documentation
+
+- `DEPENDENCY_ANALYSIS.md`
+  - current dependency map for the active mains and the figure-only scripts

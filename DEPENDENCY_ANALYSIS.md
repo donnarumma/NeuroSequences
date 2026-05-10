@@ -1,474 +1,380 @@
-# MATLAB Sequences Project - Dependency Analysis Report
+# NeuroSequences Dependency Analysis
 
-**Analysis Date:** April 24, 2026  
-**Project Location:** `/home/donnarumma/OneDrive/tools/Sequences/`
-
----
+**Analysis date:** May 10, 2026  
+**Repository:** `~/tools/NeuroSequences`
 
 ## Executive Summary
 
-The Sequences project is a MATLAB simulation framework for sequence planning and working memory tasks. It depends on **two external projects** (HAI_LANGUAGE and TrialBox) and the **SPM library** (Statistical Parametric Mapping). The project contains **6 active MAIN_*.m entry points** organized in 3 locations (Chen, Xie, Mushiake).
-
----
-
-## 1. All MAIN_*.m Files in the Project
-
-| File | Location | Status | Type |
-|------|----------|--------|------|
-| MAIN_Chen01_S1S2S3_Backward.m | Chen/ | Active | Sequence – Backward only |
-| MAIN_Chen01_S1S2S3_Forward.m | Chen/ | Active | Sequence – Forward only |
-| MAIN_Chen01_S1S2S3_Sensors.m | Chen/ | Active | Sensor/Neutral control |
-| MAIN_Chen02_S2_FwBw.m | Chen/ | Active | Sequence – 2D, Fw+Bw |
-| MAIN_Mushiake.m | Mushiake/ | Active | AY 2-Level Maze task |
-| MAIN_Xie_S3_Forward.m | Xie/ | Active | Sequence – Forward 3D |
-
-**Total Active:** 6
-
----
-
-## 2. Dependency Chains for Each MAIN_*.m
-
-### **ACTIVE SCRIPTS** (Chen, Xie, Mushiake)
-
-#### **Chen/MAIN_Chen01_S1S2S3_Backward.m**
-
-**Execution Flow:**
-```
-MAIN_Chen01_S1S2S3_Backward
-├── run_sequenceParams()                    [Internal: pms/]
-├── build_batch_description()               [Internal: utilites/]
-├── build_sequence_model()                  [Internal: engine/]
-│   ├── build_type_info()                   [Internal: engine/]
-│   ├── build_family_specs()                [Internal: engine/]
-│   └── SequenceTransitions()               [Internal: utilites/]
-├── build_sequence_trial_description()      [Internal: utilites/]
-├── run_sequence()                          [Internal: engine/]
-│   ├── resolveFunctionParams()             [EXTERNAL: TrialBox]
-│   ├── HAI_DefaultParams()                 [EXTERNAL: HAI_LANGUAGE]
-│   ├── HAI_initialiseParams()              [EXTERNAL: HAI_LANGUAGE]
-│   └── VB_MDP_X()                          [Internal: engine/]
-│       ├── spm_MDP_check()                 [EXTERNAL: SPM]
-│       └── spm_MDP_VB_H / spm_MDP_VB_X()   [EXTERNAL: SPM]
-├── Collect_Trial_Results()                 [Internal: utilites/]
-├── extract_sequence_data_trialsParams()    [Internal: pms/]
-├── plot_sequence_firing_rateParams()       [Internal: pms/]
-├── plot_sequence_firing_rate()             [Internal: plot/]
-└── BETA_pca()                              [Internal: plot/]
-```
-
-**Dependencies Classification:**
-- **Internal Sequences:** 12 functions
-- **External HAI_LANGUAGE:** 2 functions
-- **External TrialBox:** 1 function (resolveFunctionParams)
-- **External SPM:** 2+ functions
-
----
-
-#### **Chen/MAIN_Chen01_S1S2S3_Forward.m**
-
-Identical structure to MAIN_Chen01_S1S2S3_Backward.m (same pipeline, only `typeMask3D` differs to select forward-only order templates).
-
-**Key Differences:**
-- `typeMask3D = logical([1 0 0 0 0 0])` (forward-only)
-
----
-
-#### **Chen/MAIN_Chen01_S1S2S3_Sensors.m**
-
-**Execution Flow:**
-```
-MAIN_Chen01_S1S2S3_Sensors
-├── run_sensorsParams()                     [Internal: pms/]
-├── feval(runPms.dictionary)                → DICTIONARY_ABCDEF_Neutral_2LEV()  [Internal: utilites/]
-├── build_sensor_trial_description()        [Internal: utilites/]
-├── run_sensors()                           [Internal: engine/]
-│   ├── HAI_initialiseParams()              [EXTERNAL: HAI_LANGUAGE]
-│   ├── HAI_DefaultParams()                 [EXTERNAL: HAI_LANGUAGE]
-│   ├── resolveFunctionParams()             [EXTERNAL: TrialBox]
-│   └── vb_infer_lower_level() / VB_MDP_X()  [Internal/External]
-├── Collect_Sensor_Results()                [Internal: utilites/]
-├── extract_sequence_data_trialsParams()    [Internal: pms/]
-└── plot_sequence_firing_rate(), etc.       [Internal: plot/]
-```
-
-**Dependencies Classification:**
-- **Internal Sequences:** 9 functions
-- **External HAI_LANGUAGE:** 2 functions
-- **External TrialBox:** 1 function
-- **External SPM:** 1+ function (via VB_MDP_X)
-
----
-
-#### **Chen/MAIN_Chen02_S2_FwBw.m**
-
-**Execution Flow:**
-Same as MAIN_Chen01_S1S2S3_Backward with different model configuration:
-- Only 2D sequences enabled: `include2D = true; include3D = false`
-- Policy type priors: `policyTypeWeights = [10, 1]` (favors forward)
-
----
-
-#### **Mushiake/MAIN_Mushiake.m**
-
-**Execution Flow:**
-```
-MAIN_Mushiake
-├── run_sensorsParams()                     [Internal: pms/]
-├── run_sensors()                           [Internal: engine/]
-│   └── (uses trialRunner = 'run_mushiake_trial')
-│       ├── run_mushiake_trial()            [Internal: utilites/]
-│       │   └── TEST_AY_2LEV_Mushiake()     [Internal: utilites/]
-│       │       ├── HAI_DefaultParams()     [EXTERNAL: HAI_LANGUAGE]
-│       │       ├── HAI_initialiseParams()  [EXTERNAL: HAI_LANGUAGE]
-│       │       ├── MAZE_Mushiake()         [Internal: utilites/]
-│       │       ├── mushiake_get_all_state_sequences()  [Internal: utilites/]
-│       │       └── run_hai_trial()         [Internal: utilites/]
-│       │           ├── HAI_RUN()           [EXTERNAL: HAI_LANGUAGE]
-│       │           └── HAI_smartMDP()      [EXTERNAL: HAI_LANGUAGE]
-│       └── spm_MDP_VB_X() / VB_MDP_X()     [External/Internal]
-├── Collect_Sensor_Results()                [Internal: utilites/]
-├── build_mushiake_trial_data()             [Internal: utilites/]
-├── mushiake_apply_readout_preset()         [Internal: utilites/]
-├── plot_mushiake_mazes()                   [Internal: Mushiake/MAIN_Mushiake.m]
-└── extract_sequence_data_trialsParams()    [Internal: pms/]
-```
+The repository currently contains:
 
-**Dependencies Classification:**
-- **Internal Sequences:** 12 functions
-- **External HAI_LANGUAGE:** 5 functions (HAI_DefaultParams, HAI_initialiseParams, HAI_RUN, HAI_smartMDP, and potentially spm_MDP_VB_X)
-- **External TrialBox:** 1 function (resolveFunctionParams, indirectly via run_sensors)
+- 6 active `MAIN_*_Exp.m` simulation entry points
+- 4 figure-only reproduction scripts
+- 3 external dependency families
+  - `HAI_LANGUAGE`
+  - `TrialBox`
+  - `SPM`
 
----
+The maintained simulation workflow is now built around:
 
-#### **Xie/MAIN_Xie_S3_Forward.m**
+- `run_sequence` or `run_sensors`
+- `Collect_Trial_Results` or `Collect_Sensor_Results`
+- `extract_sequence_trials`
+- `plot_sequence_firing_rate`
+- `plot_sequence_raster`
+- `BETA_pcaSpace`
 
-Same pipeline as Chen series with custom parameters:
-- Legacy Seq3_Fwd GoToTarget layout preservation
-- `nStayStates = 7` (instead of default)
-- 3D forward-only: `typeMask3D = logical([1 0 0 0 0 0])`
+The older `SAMPLE_Sequence` / `BETA_pca` path is no longer the primary path for the active Chen and Xie mains. `Mushiake` still contains a legacy PCA block, but that block is currently inactive because the script returns earlier.
 
-**Dependencies:** Identical to MAIN_Chen01_S1S2S3_Forward.m
-
----
-
-## 3. External Dependency Summary
-
-### **Dependency 1: HAI_LANGUAGE**
-
-**Location:** `~/tools/HAI_LANGUAGE/`  
-**GitHub:** https://github.com/donnarumma/HAI_LANGUAGE
-
-**Functions Used from HAI_LANGUAGE:**
-- `HAI_DefaultParams()` – Construct default parameter structures
-- `HAI_initialiseParams()` – Initialize hierarchical inference parameters
-- `HAI_RUN()` – Execute hierarchical active inference
-- `HAI_smartMDP()` – Post-process MDP results
-
-**Used by:**
-- `engine/run_sequence.m`
-- `engine/run_sensors.m`
-- `utilites/run_hai_trial.m`
-- `utilites/TEST_AY_2LEV_Mushiake.m`
+## 1. Entry Points
 
-**Purpose:** Provides hierarchical active inference framework (Level 1/Level 2 models)
+### Active model simulations
 
----
+| File | Family | Purpose |
+|------|--------|---------|
+| `Chen/MAIN_Chen01_S1S2S3_Forward_Exp.m` | Chen | Forward-only simulation across 1D, 2D, 3D sequence families |
+| `Chen/MAIN_Chen01_S1S2S3_Backward_Exp.m` | Chen | Backward-only simulation across 1D, 2D, 3D sequence families |
+| `Chen/MAIN_Chen01_S1S2S3_Sensors_Exp.m` | Chen | Sensory / neutral control branch |
+| `Chen/MAIN_Chen02_S2_FwBw_Exp.m` | Chen | 2D forward/backward branch with policy-type priors |
+| `Xie/MAIN_Xie_S3_Forward_Exp.m` | Xie | 3D forward-only branch |
+| `Mushiake/MAIN_Mushiake_Exp.m` | Mushiake | AY maze branch using the sensor runner |
 
-### **Dependency 2: TrialBox**
+### Figure-only scripts
 
-**Location:** `~/tools/TrialBox/`  
-**GitHub:** https://github.com/donnarumma/TrialBox
-
-**Functions Used from TrialBox:**
-- `resolveFunctionParams()` – Merge parameter structures with function defaults
+These do not run the model. They generate printed or stylized figure reproductions.
 
-**Used by:**
-- `engine/run_sequence.m` (line 19)
-- `engine/run_sensors.m` (indirectly via run_sequence)
+| File | Role |
+|------|------|
+| `Chen/chenForward.m` | forward figure sketch / reproduction |
+| `Chen/chenBackward.m` | backward figure sketch / reproduction |
+| `Chen/chenSensory.m` | sensory figure sketch / reproduction |
+| `Xie/xie.m` | Xie polygon-style figure reproduction |
 
-**Purpose:** Generic parameter resolution and override mechanism for trial execution
+## 2. External Dependencies
 
----
+### HAI_LANGUAGE
 
-### **Dependency 3: SPM (Statistical Parametric Mapping)**
+**Repository:** `https://github.com/donnarumma/HAI_LANGUAGE`
 
-**Location:** `~/tools/spm12/` (or system SPM installation)  
-**URL:** https://www.fil.ion.ucl.ac.uk/spm/
+Main roles in this project:
 
-**Functions Used from SPM:**
-- `spm_MDP_check()` – Validate MDP structure integrity
-- `spm_MDP_update()` – Update model parameters
-- `spm_MDP_VB_X()` – Variational Bayes active inference solver (alternative to VB_MDP_X)
-- `spm_MDP_VB_sleep()` – Bayesian model reduction
-- `spm_MDP_VB_game()` – Game-theoretic MDP solver
-- `spm_MDP_get_T()` – Extract temporal information
-- `spm_dot()` – Tensor contraction utility
-- `spm_log()` – Log transformation with epsilon protection
-- `spm_softmax()` – Softmax normalization
+- default HAI parameter setup
+- hierarchical active-inference execution
+- MDP-to-firing-rate helper functions
+- rate extension and plotting-side helpers
 
-**Used by:**
-- `engine/VB_MDP_X.m` (wrapper around or alternative to SPM functions)
-- `engine/vb_prepare_lower_level_mdp.m`
-- `engine/vb_integrate_lower_level_outcomes.m`
-- `engine/vb_infer_lower_level.m`
+Examples used directly or indirectly:
 
-**Purpose:** Standard active inference inference solver and utilities. VB_MDP_X is a custom implementation that may call SPM functions or provides drop-in replacement.
+- `HAI_DefaultParams`
+- `HAI_initialiseParams`
+- `HAI_RUN`
+- `HAI_smartMDP`
+- `HAI_extendFiringRates`
 
----
+### TrialBox
 
-## 4. Internal Dependencies Structure
+**Repository:** `https://github.com/donnarumma/TrialBox`
 
-### **Core Functional Modules**
+Main role in this project:
 
-#### **engine/** - Core Inference & Model Building
+- parameter resolution via `resolveFunctionParams`
 
-| File | Purpose | Internal Deps | External Deps |
-|------|---------|---------------|---------------|
-| `run_sequence.m` | Execute one sequence trial | build_sequence_model, VB_MDP_X, HAI_* | resolveFunctionParams, HAI_LANGUAGE, SPM |
-| `run_sensors.m` | Execute sensor trial | (runs feval) | HAI_LANGUAGE, TrialBox, SPM |
-| `build_sequence_model.m` | Construct generative model | build_type_info, build_family_specs, SequenceTransitions | None |
-| `VB_MDP_X.m` | Variational Bayes solver | vb_* functions | SPM (conditional) |
-| `VB_MDP_C.m`, `VB_MDP_XX.m` | Alternative solvers | – | SPM (probably) |
+This is used extensively by the newer parameterized helper functions and plotting utilities.
 
-#### **pms/** - Parameter Specifications
+### SPM
 
-| File | Purpose | Usage |
-|------|---------|-------|
-| `run_sequenceParams.m` | Default parameters for run_sequence | All active MAIN programs |
-| `run_sensorsParams.m` | Default parameters for run_sensors | Sensor task MAIN programs |
-| `plot_sequence_firing_rateParams.m` | Firing rate plot parameters | Plotting pipelines |
-| `plot_sequence_rasterParams.m` | Raster plot parameters | Plotting pipelines |
+**Project:** `https://www.fil.ion.ucl.ac.uk/spm/`
 
-#### **utilites/** - Helper Functions
+Main role in this project:
 
-| File | Purpose | Internal Deps |
-|------|---------|---------------|
-| `Collect_Trial_Results.m` | Gather saved trial MDP files | plot functions |
-| `Collect_Sensor_Results.m` | Gather sensor trial results | build_mushiake_trial_data, etc. |
-| `build_sequence_trial_description.m` | Trial naming/metadata | build_sequence_trial_description |
-| `build_batch_description.m` | Batch folder naming | build_batch_family_label, etc. |
-| `SequenceTransitions.m` | Generate transition matrices | None |
-| `Sequences3D.m`, `Sequences2D.m`, `Sequences1D.m` | Task definitions | None |
-| `DICTIONARY_*.m` | Task observation spaces | None |
-| `run_mushiake_trial.m` | Mushiake trial runner | TEST_AY_2LEV_Mushiake, run_hai_trial |
-| `run_hai_trial.m` | HAI execution wrapper | HAI_RUN, HAI_smartMDP |
-| `TEST_AY_2LEV_Mushiake.m` | Mushiake 2-level test | run_hai_trial, HAI_* functions |
+- active-inference / MDP solver support and utility functions
 
-#### **plot/** - Visualization
+Examples used in the solver path:
 
-| File | Purpose | Internal Deps |
-|------|---------|---------------|
-| `plot_sequence_firing_rate.m` | Firing rate heatmaps | extract_sequence_data_trials |
-| `plot_sequence_raster.m` | Neural rasters | extract_sequence_data_trials |
-| `BETA_pca.m` | PCA summaries | extract_sequence_data_trials |
+- `spm_MDP_check`
+- `spm_MDP_VB_X`
+- `spm_dot`
+- `spm_softmax`
 
----
+## 3. Core Internal Modules
 
-## 5. Files That Belong to Shared/Multiple Projects
+### Execution layer
 
-### **Potential Shared Files** (candidates for refactoring)
+| File | Role |
+|------|------|
+| `engine/run_sequence.m` | execute one generic sequence trial |
+| `engine/run_sensors.m` | execute one sensor-style trial |
+| `engine/build_sequence_model.m` | build the static sequence model for a batch |
+| `engine/VB_MDP_X.m` | main variational solver wrapper / implementation |
 
-Based on file naming and function scope:
-
-| File | Current Location | Could be Shared? | Reason |
-|------|------------------|------------------|--------|
-| `DICTIONARY_*.m` | `utilites/` | Maybe | Generic task definition format |
-| `SequenceTransitions.m` | `utilites/` | Maybe | Generic sequence generation algorithm |
-| `smoothFR.m` | `utilites/` | Yes | Neural data smoothing (general-purpose) |
-| `extract_sequence_data_trials.m` | `utilites/` | Maybe | Data extraction (could be in TrialBox) |
-| `run_hai_trial.m` | `utilites/` | Partial | Wrapper around HAI_RUN; could live in HAI_LANGUAGE |
-| `TEST_AY_2LEV_Mushiake.m` | `utilites/` | No | Mushiake-specific test harness |
-
-**Key Observation:** `run_hai_trial.m` acts as a bridge between Sequences and HAI_LANGUAGE, suggesting it could belong to either project.
-
----
-
-## 6. External Path References
-
-### **Documented in README.md**
-
-The project's README explicitly lists two required external repositories:
-
-```
-1. Clone and add to the MATLAB path:
-   - https://github.com/donnarumma/HAI_LANGUAGE
-   - https://github.com/donnarumma/TrialBox
-
-2. Add this repository to the MATLAB path.
+### Collection layer
+
+| File | Role |
+|------|------|
+| `utilites/Collect_Trial_Results.m` | rebuild collected sequence trial summaries from saved `MDP_*` files |
+| `utilites/Collect_Sensor_Results.m` | rebuild collected sensor-style trial summaries |
+| `utilites/build_mushiake_trial_data.m` | Mushiake readout reconstruction |
+| `utilites/build_sensor_trial_data.m` | sensor readout reconstruction |
+
+### Readout preparation
+
+| File | Role |
+|------|------|
+| `utilites/extract_sequence_trials.m` | maintained loader / expander for plotting-side `data_trials` |
+| `pms/extract_sequence_data_trialsParams.m` | defaults for readout extraction and spike generation |
+| `utilites/firingRatesToSpikes.m` | centralized spike generator with legacy and newer modes |
+| `utilites/getCosineTuning.m` | select tuning function, tuning parameters, and default spike mode |
+| `utilites/cosineTuneCircularBlocks.m` | block-circular tuning implementation |
+
+### Plotting and geometry
+
+| File | Role |
+|------|------|
+| `plot/plot_sequence_firing_rate.m` | maintained sample firing-rate wrapper |
+| `plot/plot_sequence_raster.m` | maintained sample raster wrapper |
+| `plot/tileNeuronPolarByTypes.m` | tiled polar plots by symbolic step |
+| `plot/BETA_pcaSpace.m` | maintained PCA / geometry analysis path |
+| `pms/BETA_pcaSpaceParams.m` | self-contained defaults for `BETA_pcaSpace` |
+
+## 4. Shared Sequence Pipeline
+
+This is the common path for:
+
+- `Chen/MAIN_Chen01_S1S2S3_Forward_Exp.m`
+- `Chen/MAIN_Chen01_S1S2S3_Backward_Exp.m`
+- `Chen/MAIN_Chen02_S2_FwBw_Exp.m`
+- `Xie/MAIN_Xie_S3_Forward_Exp.m`
+
+### Dependency chain
+
+```text
+MAIN_*_Exp
+-> run_sequenceParams
+-> build_batch_description
+-> build_sequence_model
+-> save_batch_metadata / get_or_create_trial_seeds
+-> build_sequence_trial_description
+-> run_sequence
+-> Collect_Trial_Results
+-> getCosineTuning
+-> extract_sequence_trials
+-> plot_sequence_firing_rate
+-> plot_sequence_raster
+-> tileNeuronPolarByTypes
+-> BETA_pcaSpace
 ```
 
-### **No Relative Path References Found**
+### Important notes
 
-No `../` relative path references were detected in any .m file. This indicates:
-- ✓ Clean separation of concerns
-- ✓ Explicit path setup via setup_Sequences.m
-- ✓ No hard dependencies on sister projects via relative paths
+- `extract_sequence_trials` is the maintained readout-preparation entry point.
+- `getCosineTuning` now controls both tuning choice and the default spike mode returned to the mains.
+- The active mains typically use `PopRates` for polar plots and PCA summaries.
+- `BETA_pcaSpace` is the maintained PCA path for these branches.
 
----
+## 5. Chen01 Forward / Backward
 
-## 7. Modern vs. Legacy Dependency Styles
+### `Chen/MAIN_Chen01_S1S2S3_Forward_Exp.m`
 
-### **Modern Pipeline (Active MAIN scripts)**
+Key settings:
 
-**Pattern:** Modular, generic, hierarchical
+- `include3D = true`
+- `include2D = true`
+- `include1D = true`
+- `typeMask3D = [1 0 0 0 0 0]`
 
-```
-MAIN_*.m
-  ├── setup sequenceModel once
-  ├── loop: run_sequence() / run_sensors()
-  │   └── inference (VB_MDP_X or HAI_RUN)
-  └── collect_results()
-```
+Readout / plotting path:
 
-**Dependency Profile:** Heavy use of HAI_LANGUAGE, TrialBox, SPM
+- `getCosineTuning(tunemode)`
+- `extract_sequence_trials`
+- sample firing-rate and raster plots
+- polar plots over `type1:type3`
+- `BETA_pcaSpace`
 
-### **Legacy Pipeline (archived MAIN scripts in legacy/)**
+### `Chen/MAIN_Chen01_S1S2S3_Backward_Exp.m`
 
-**Pattern:** Direct, script-based, monolithic
+Same structure as forward, with:
 
-```
-legacy/MAIN_*.m
-  ├── loop: TEST_ABC_XIE_*.m()  [custom trial code]
-  │   └── old-style inference
-  └── Collect_SEQUENCES_RESULTS()
-```
+- `typeMask3D = [0 0 0 0 0 1]`
 
-**Dependency Profile:** Minimal external; functions embedded in legacy/
+It also uses the maintained `BETA_pcaSpace` path and sequence-style legacy compatibility settings for some `PcaTime` layout details.
 
----
+## 6. Chen02 Forward / Backward
 
-## 8. Summary: Dependency Classification Table
+### `Chen/MAIN_Chen02_S2_FwBw_Exp.m`
 
-### **By MAIN Script**
+This main uses the same sequence pipeline, but with a different batch definition:
 
-| MAIN Script | Internal | HAI_LANGUAGE | TrialBox | SPM | Status |
-|-------------|----------|--------------|----------|-----|--------|
-| MAIN_Chen01_S1S2S3_Backward | ✓ | ✓ | ✓ | ✓ | Active |
-| MAIN_Chen01_S1S2S3_Forward | ✓ | ✓ | ✓ | ✓ | Active |
-| MAIN_Chen01_S1S2S3_Sensors | ✓ | ✓ | ✓ | ✓ | Active |
-| MAIN_Chen02_S2_FwBw | ✓ | ✓ | ✓ | ✓ | Active |
-| MAIN_Mushiake | ✓ | ✓✓ | ✓ | ✓ | Active |
-| MAIN_Xie_S3_Forward | ✓ | ✓ | ✓ | ✓ | Active |
+- 2D families only
+- fixed minimum sequence length of 2
+- both forward and backward trial types
+- non-uniform `policyTypeWeights = [10, 1]`
 
-**Legend:**
-- ✓ = Used
-- ✓✓ = Heavily used (5+ functions)
-- (✓) = Indirectly or conditionally used
-- – = Not used
+Extra dependency detail:
 
----
+- the collected batch is split into forward and backward subsets after collection
+- both subsets are passed separately to `BETA_pcaSpace`
+- the PCA branch uses `pcaNeuronSelectionMode = 'matched_step_blocks'`
 
-## 9. Recommendations
+## 7. Xie Forward
 
-### **For Code Organization**
+### `Xie/MAIN_Xie_S3_Forward_Exp.m`
 
-1. **Consider promoting shared utilities to TrialBox:**
-   - `resolveFunctionParams()` integration
-   - `extract_sequence_data_trials.m` (data I/O helpers)
-   - Generic smoothing utilities (smoothFR.m)
+This is structurally the same maintained sequence path as the Chen01 forward branch, with Xie-specific figure and timing conventions.
 
-2. **Consider promoting HAI bindings to HAI_LANGUAGE:**
-   - `run_hai_trial.m` could be `HAI_sequence_wrapper.m` in HAI_LANGUAGE
-   - `TEST_AY_2LEV_Mushiake.m` could be a Mushiake-specific module within HAI_LANGUAGE
+Key chain:
 
-3. **Keep Sequences-specific:**
-   - Core model builders (build_sequence_model, SequenceTransitions)
-   - MAIN_*.m scripts and parameter specs
-   - Plotting functions (currently plot-specific anyway)
-
-### **For Dependency Management**
-
-- ✓ **Good:** No relative path references; clean modular separation
-- ⚠ **Consider:** Document minimum versions of HAI_LANGUAGE and TrialBox required
-- ⚠ **Consider:** Add automated dependency checker (setup_Sequences_Check.m)
-
-### **For Future Development**
-
-1. If adding new experiments, follow the active pipeline pattern:
-   - Don't add to legacy/
-   - Create new MAIN_*.m in a project-specific folder
-   - Use setup_Sequences.m for path management
-
-2. Consider abstracting the sensor/maze experiment pattern:
-   - MAIN_Mushiake is more complex than sequence-only tasks
-   - Could benefit from a "hierarchical task runner" utility in TrialBox
-
----
-
-## Appendix: File Tree with Dependency Notation
-
-```
-Sequences/
-├── README.md
-├── setup_Sequences.m
-│
-├── Chen/
-│   ├── MAIN_Chen01_S1S2S3_Backward.m         [Active, HAI✓ TrialBox✓ SPM✓]
-│   ├── MAIN_Chen01_S1S2S3_Forward.m          [Active, HAI✓ TrialBox✓ SPM✓]
-│   ├── MAIN_Chen01_S1S2S3_Sensors.m          [Active, HAI✓ TrialBox✓ SPM✓]
-│   └── MAIN_Chen02_S2_FwBw.m                 [Active, HAI✓ TrialBox✓ SPM✓]
-│
-├── Xie/
-│   └── MAIN_Xie_S3_Forward.m                 [Active, HAI✓ TrialBox✓ SPM✓]
-│
-├── Mushiake/
-│   ├── MAIN_Mushiake.m                       [Active, HAI✓✓ TrialBox✓ SPM✓]
-│   └── _snapshots/
-│
-├── engine/ [Generic inference & model building]
-│   ├── build_sequence_model.m                [Internal]
-│   ├── build_transition_matrices.m           [Internal]
-│   ├── build_likelihood_matrices.m           [Internal]
-│   ├── build_type_info.m                     [Internal]
-│   ├── build_family_specs.m                  [Internal]
-│   ├── run_sequence.m                        [HAI✓ TrialBox✓ SPM✓]
-│   ├── run_sensors.m                         [HAI✓ TrialBox✓ SPM✓]
-│   ├── VB_MDP_X.m                            [SPM✓]
-│   ├── VB_MDP_C.m                            [SPM✓]
-│   ├── VB_MDP_XX.m                           [SPM✓]
-│   ├── vb_prepare_lower_level_mdp.m          [SPM✓]
-│   ├── vb_infer_lower_level.m                [SPM✓]
-│   ├── vb_integrate_lower_level_outcomes.m   [SPM✓]
-│   └── vb_describe_lower_level_call.m        [Internal]
-│
-├── pms/ [Parameter specifications]
-│   ├── run_sequenceParams.m                  [Internal]
-│   ├── run_sensorsParams.m                   [Internal]
-│   ├── plot_sequence_firing_rateParams.m     [Internal]
-│   └── plot_sequence_rasterParams.m          [Internal]
-│
-├── utilites/ [Helper functions]
-│   ├── Collect_Trial_Results.m               [Internal]
-│   ├── Collect_Sensor_Results.m              [Internal]
-│   ├── build_batch_description.m             [Internal]
-│   ├── build_sequence_trial_description.m    [Internal]
-│   ├── find_existing_trial_file.m            [Internal]
-│   ├── get_or_create_trial_seeds.m           [Internal]
-│   ├── SequenceTransitions.m                 [Internal]
-│   ├── Sequences3D.m                         [Internal]
-│   ├── Sequences2D.m                         [Internal]
-│   ├── Sequences1D.m                         [Internal]
-│   ├── DICTIONARY_ABCDEF_Neutral_2LEV.m      [Internal]
-│   ├── DICTIONARY_ABC_t2_CONTEXT.m           [Internal]
-│   ├── DICTIONARY_AY_2LEV_Mushiake.m         [Internal]
-│   ├── extract_sequence_data_trials.m        [Internal]
-│   ├── run_mushiake_trial.m                  [HAI✓]
-│   ├── run_hai_trial.m                       [HAI✓]
-│   ├── TEST_AY_2LEV_Mushiake.m               [HAI✓]
-│   ├── MAZE_Mushiake.m                       [Internal]
-│   ├── smoothFR.m                            [Internal]
-│   └── [10+ other utilities]
-│
-├── plot/ [Visualization]
-│   ├── plot_sequence_firing_rate.m           [Internal]
-│   ├── plot_sequence_raster.m                [Internal]
-│   ├── BETA_pca.m                            [Internal]
-│   └── [3+ other plotting functions]
-│
-├── debug/ [Diagnostic & testing]
-│   └── [Various debug/test scripts]
+```text
+MAIN_Xie_S3_Forward_Exp
+-> run_sequenceParams
+-> build_sequence_model
+-> run_sequence
+-> Collect_Trial_Results
+-> getCosineTuning
+-> extract_sequence_trials
+-> plot_sequence_firing_rate / plot_sequence_raster
+-> tileNeuronPolarByTypes
+-> BETA_pcaSpace
 ```
 
----
+## 8. Chen Sensors
 
-**End of Report**
+### `Chen/MAIN_Chen01_S1S2S3_Sensors_Exp.m`
+
+This branch differs from the generic sequence mains because it uses the sensor runner and preprocessed readouts.
+
+### Dependency chain
+
+```text
+MAIN_Chen01_S1S2S3_Sensors_Exp
+-> run_sensorsParams
+-> run_sensors
+-> Collect_Sensor_Results
+-> extract_sequence_trials(usePreprocessedPopFR = true)
+-> plot_sequence_firing_rate
+-> plot_sequence_raster
+-> add_sensor_type_fields
+-> tileNeuronPolarByTypes
+-> BETA_pcaSpace
+```
+
+### Important notes
+
+- cosine-shaped sensor readouts are already assembled upstream during collection
+- `extract_sequence_trials(..., usePreprocessedPopFR = true)` extends those preprocessed population responses and generates `PopRates`, `firingRates`, and `Spikes`
+- the branch uses sensor-style compatibility settings in `BETA_pcaSpace`
+- symbolic fields such as `type1:type3` are reconstructed locally for the generic polar plotters
+
+## 9. Mushiake
+
+### `Mushiake/MAIN_Mushiake_Exp.m`
+
+This branch is the main exception in the repository.
+
+### Active dependency chain
+
+```text
+MAIN_Mushiake_Exp
+-> run_sensorsParams
+-> run_sensors
+-> run_mushiake_trial
+-> Collect_Sensor_Results
+-> build_mushiake_trial_data
+-> mushiake_apply_readout_preset
+-> plot_mushiake_mazes
+-> extract_sequence_data_trials(usePreprocessedPopFR = true)
+-> plot_sequence_firing_rate
+-> plot_sequence_raster
+```
+
+### Important notes
+
+- `run_sensors` is reused, but trial execution is redirected through `run_mushiake_trial`
+- maze plotting is part of the main active path
+- sample plots use preprocessed Mushiake readouts
+- a legacy PCA block using `BETA_pca` still exists below an early `return`
+- because of that `return`, the active path currently does not execute PCA
+
+## 10. Tuning and Spike-Generation Dependencies
+
+The newer mains rely on the combination:
+
+```text
+getCosineTuning
+-> chosen cosine function
+-> cosine parameter struct
+-> default spikeGenerationMode
+-> firingRatesToSpikes
+```
+
+### Current maintained spike modes
+
+| Mode | Meaning |
+|------|---------|
+| `legacy` | original dense Bernoulli-like rule |
+| `legacy_logit_noise` | old alternative logit/noise rule |
+| `thresholded_bernoulli` | sparse thresholded Bernoulli spikes |
+| `thresholded_refractory` | thresholded Bernoulli with refractory silence |
+
+### Current maintained cosine modes
+
+| Mode | Main implementation |
+|------|---------------------|
+| no tuning | identity / empty function |
+| legacy cosine | `cosineTune` |
+| step cosine | `cosineTuningStep` |
+| circular blocks | `cosineTuneCircularBlocks` |
+
+## 11. Figure-Only Script Dependencies
+
+These scripts are lightweight compared with the simulation mains.
+
+### Chen figure reproductions
+
+- `Chen/chenForward.m`
+- `Chen/chenBackward.m`
+- `Chen/chenSensory.m`
+
+Typical direct dependencies:
+
+- `plotPCAHexagonTraj`
+- `hfigPrint`
+- basic MATLAB plotting functions
+
+They do not call:
+
+- `run_sequence`
+- `run_sensors`
+- `Collect_*`
+- `extract_sequence_trials`
+- `BETA_pcaSpace`
+
+### Xie figure reproduction
+
+- `Xie/xie.m`
+
+Typical direct dependencies:
+
+- `linspecer`
+- `hfigPrint`
+- basic MATLAB plotting functions
+
+This script is also figure-only and not connected to the model simulation pipeline.
+
+## 12. Practical Interpretation
+
+If the goal is:
+
+- to run the model
+  - start from one of the 6 `MAIN_*_Exp.m` files
+- to reproduce stylized publication-like figures without rerunning the model
+  - use `chenForward`, `chenBackward`, `chenSensory`, or `xie`
+
+If the goal is to follow the maintained analysis path, the most important functions to inspect are:
+
+- `run_sequence`
+- `run_sensors`
+- `Collect_Trial_Results`
+- `Collect_Sensor_Results`
+- `extract_sequence_trials`
+- `firingRatesToSpikes`
+- `getCosineTuning`
+- `BETA_pcaSpace`
