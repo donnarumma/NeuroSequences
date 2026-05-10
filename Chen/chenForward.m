@@ -1,5 +1,11 @@
+function hfg = chenForward(ifplot) 
 %% Hexagon + 6 3D lines with opening control
 figName = 'Forward';
+try
+    ifplot;
+catch
+    ifplot = false;
+end
 ifplot = false;
 hfg.(figName)=figure('Visible',ifplot); clf; hold on; axis equal; box on
 set(gcf,'Color','w');
@@ -33,20 +39,20 @@ vertexColors = [ ...
     0.85 0.33 0.10;  % orange/red
     0.80 0.10 0.10]; % red
 
-colors = [ ...
-    1.0 0.3 0.9;   % magenta
-    0.0 0.8 0.9;   % cyan
-    1.0 0.7 0.0;];  % orange
-  
+colors = [  ...
+            0.0 0.8 0.9;    % cyan
+            1.0 0.3 0.9;    % magenta
+            1.0 0.7 0.0;    % orange
+         ];    
 
 %-------------------------
 % 3D “axonal” curves
 %-------------------------
 startPoint = [0 0 0];               % common origin
 
-splitPoints = [3.0, 0, 0; ...
+splitPoints = [1.0, 0, 0; ...
                2.0, 0, 0; ...
-               1.0, 0, 0];           % where they start enlarging
+               3.0, 0, 0];           % where they start enlarging
 % lineColor  = [0.95 0.7 0];        % yellow–orange
 nSamples            = 200;
 
@@ -56,18 +62,19 @@ params.nSamples     = nSamples;
 params.openFrac     = openFrac;
 params.widenFactor  = widenFactor;
 % hfg.Backward        = figure;
+starts          = [1,1,1];
 
 nTiles              = 3;
 t                   = tiledlayout(nTiles, 1);
 for iPlot=1:3
     ax3D=nexttile;
-  
+    params.start        = starts(iPlot);
     hold on;
     
-    vx      = zHex*ones(size(vx));
     vy      = hexCtr(1) + R*cos(angles) + rand(1,nVert)*sig;
     vz      = hexCtr(2) + R*sin(angles) + rand(1,nVert)*sig;
-
+    vx      = zHex*ones(size(vy));
+    
     plot3([vx vx(1)], [vy vy(1)], [vz vz(1)], ...
       'k-', 'LineWidth', 4);   % hexagon edges
 
@@ -137,7 +144,7 @@ hY          = ylabel('axis 1');
 
 hZ          = zlabel('axis 2');
 pos         = hZ.Position;       % [x y z] in data units for 3D axes
-pos(1)      = pos(1) + 0.4;   % move right (closer to axis)
+pos(1)      = pos(1);   % move right (closer to axis)
 hZ.Position = pos;
 set(gca,'Clipping','off');
     
@@ -146,18 +153,19 @@ sPos = [sort(splitPoints(:,1)); max(splitPoints(:,1))+1.5]-0.3;%+0.7;
 labels = {'S1','S2','S3','Delay'};
 for i = 1:4
     % plot(sPos(i),-5-1.05,'k|','LineWidth',1.2);
-   spo= text(sPos(i),-1.18,-2.3, labels{i}, ...
+   spo= text(sPos(i),-1.18,-2.55, labels{i}, ...
         'HorizontalAlignment','center', ...
         'FontSize',24,'FontWeight','bol');
    set(spo, 'Clipping', 'off');
+   set(gca,'Clipping', 'off');
 end
 set(hfg.(figName),'Position',p);
 
 if ~ifplot
     fprintf('Step 6. save some plots\n')
-    path_dir                    = '~/TESTS/HAI_LANGUAGE/SEQUENCES/FIG4/';
+    path_dir                    = '/TESTS/HAI_SEQUENCES/Chen01/';
     description                 = figName;
-    save_dir                    = [path_dir description '/'];
+    % save_dir                    = [path_dir description '/'];
     par.hfigPrint               = hfigPrintParams();
     par.hfigPrint.pdf_file      = [path_dir '/' description '.pdf'];
     par.hfigPrint.save_dir      = path_dir; 
@@ -165,51 +173,3 @@ if ~ifplot
 end
 
 return
-
-
-for k = 1:nVert
-    P0 = startPoint;
-    Pf = splitPoint;
-    P2 = [vx(k) vy(k) vz(k)];
-
-    t       = linspace(0,1,nSamples);
-    nFlat   = max(2, round(openFrac * nSamples));  % samples in flat part
-
-    x = zeros(size(t));
-    y = zeros(size(t));
-    z = zeros(size(t));
-
-    % -------- flat common segment --------
-    x(1:nFlat) = linspace(P0(1), Pf(1), nFlat);
-    y(1:nFlat) = 0;
-    z(1:nFlat) = 0;
-
-    % -------- curved diverging part (quadratic Bézier) --------
-    nCurv = nSamples - nFlat;
-    if nCurv > 0
-        tau = linspace(0,1,nCurv);
-
-        % lateral offset for each branch
-        baseYOffset = 0.5 * (k - (nVert+1)/2);  % spread across Y
-        baseZOffset = 0.7;                      % amount in Z
-        P1 = Pf + widenFactor * [0 baseYOffset baseZOffset];
-
-        B0 = (1-tau).^2;
-        B1 = 2*(1-tau).*tau;
-        B2 = tau.^2;
-
-        x(nFlat+1:end) = B0*Pf(1) + B1*P1(1) + B2*P2(1);
-        y(nFlat+1:end) = B0*Pf(2) + B1*P1(2) + B2*P2(2);
-        z(nFlat+1:end) = B0*Pf(3) + B1*P1(3) + B2*P2(3);
-    end
-
-    x = smooth(x,100);
-    y = smooth(y,100);
-    z = smooth(z,100);
-    plot3(x,y,z,'-','LineWidth',6,'Color',lineColor);
-end
-
-% axis off;
-% view(35,25);
-
-%camproj('pe

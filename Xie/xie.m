@@ -1,6 +1,6 @@
+function hfg = xie()
 %% Coordinates for each rank
-clear all; 
-close all;
+
 ifplot = false;
 rank1 = [
     -5.2  1.6;
@@ -109,11 +109,14 @@ draw_panel(rank3, 'Rank-3 subspace', colors, cloud, false, ids, dx, dy)
 %% save some plots
 if ~ifplot
     fprintf('save some plots\n')
-    path_dir                    = '~/TESTS/HAI_LANGUAGE/SEQUENCES/FIG3/';
+    path_dir                    = '/TESTS/HAI_SEQUENCES/Xie/';
+    % path_dir                    = '~/TESTS/HAI_LANGUAGE/SEQUENCES/FIG3/';
     description                 = 'xieexagons';%mfilename;
     save_dir                    = [path_dir description '/'];
     par.hfigPrint               = hfigPrintParams();
     par.hfigPrint.pdf_file      = [path_dir '/' description '.pdf'];
     par.hfigPrint.save_dir      = path_dir; 
     hfigPrint(hfg,par.hfigPrint)
+end
+
 end
