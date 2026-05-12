@@ -6,3 +6,5 @@
 /.agents
 /.gitrepo/
 *.asv
+
+local/

@@ -1,6 +1,8 @@
 %function MAIN_Chen01_S1S2S3_Sensors_Exp
 %MAIN_CHEN01_S1S2S3_SENSORS_EXP Clean Chen01 sensor main with generic plotting pipeline.
 
+print_main_dependency_disclaimer(mfilename, {'HAI_LANGUAGE', 'TrialBox', 'SPM'});
+
 %% Global settings
 rng(3);
 nReps                           = 1;

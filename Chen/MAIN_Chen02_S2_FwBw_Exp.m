@@ -1,6 +1,8 @@
 %function MAIN_Chen02_S2_FwBw_Exp
 %MAIN_CHEN02_S2_FWBW_EXP Clean Chen02 S2 forward/backward main with generic plotting pipeline.
 
+print_main_dependency_disclaimer(mfilename, {'HAI_LANGUAGE', 'TrialBox', 'SPM'});
+
 %% Global settings
 rng(3);
 nReps                           = 1;

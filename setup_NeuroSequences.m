@@ -1,11 +1,11 @@
-function setup_Sequences(rootDir)
-%SETUP_SEQUENCES Add Sequences project paths to MATLAB path
-%   setup_Sequences(rootDir) adds all subdirectories of rootDir to the 
-%   MATLAB path, except for 'legacy' and 'debug' folders.
+function setup_NeuroSequences(rootDir)
+%SETUP_NEUROSEQUENCES Add Sequences project paths to MATLAB path
+%   setup_NeuroSequences(rootDir) adds all subdirectories of rootDir to the 
+%   MATLAB path.
 %
 %   Usage:
-%       setup_Sequences('~/tools/Sequences')
-%       setup_Sequences('/media/Data/OneDrive/tools/Sequences')
+%       setup_NeuroSequences('~/tools/Sequences')
+%       setup_NeuroSequences('/media/Data/OneDrive/tools/Sequences')
 
 % Use default root directory if not provided
 if nargin < 1 || isempty(rootDir)
@@ -17,7 +17,7 @@ rootDir = expanduser(rootDir);
 
 % Check if directory exists
 if ~isfolder(rootDir)
-    error('setup_Sequences:InvalidPath', ...
+    error('setup_NeuroSequences:InvalidPath', ...
         'Root directory does not exist: %s', rootDir);
 end
 

@@ -1,6 +1,8 @@
 %function MAIN_Chen01_S1S2S3_Forward_Exp
 %MAIN_CHEN01_S1S2S3_FORWARD_EXP Clean Chen01 forward main with generic plotting pipeline.
 
+print_main_dependency_disclaimer(mfilename, {'HAI_LANGUAGE', 'TrialBox', 'SPM'});
+
 %% Global settings
 rng(3);
 nReps                           = 1;

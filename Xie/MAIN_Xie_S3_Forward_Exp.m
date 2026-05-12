@@ -1,6 +1,8 @@
 %function MAIN_Xie_S3_Forward_Exp
 %MAIN_XIE_S3_FORWARD_EXP Clean Xie S3 forward main with modular parameter blocks.
 
+print_main_dependency_disclaimer(mfilename, {'HAI_LANGUAGE', 'TrialBox', 'SPM'});
+
 %% Global settings
 rng(3);
 nReps                           = 1;

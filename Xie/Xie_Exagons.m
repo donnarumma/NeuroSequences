@@ -1,4 +1,4 @@
-function hfg = xie()
+function hfg = Xie_Exagons()
 %% Coordinates for each rank
 
 ifplot = false;
@@ -54,7 +54,7 @@ cloud = [
 ids = [  2,  3,  4,  5,  6,  1];
 dx  = [0.5,0.5,0.5,0.5,0.5,0.5,];
 dy  = [0.5,0.5,0.5,0.5,0.5,0.5,];
-hfg.xieReproduction=figure('Position',[100 200 1100 350],'visible',ifplot);
+hfg.Xie_Exagons=figure('Position',[100 200 1100 350],'visible',ifplot);
 
 %% ---------- Helper function ----------
 function draw_panel(rankPts, titleStr, colors, cloudPts, labelFlag, ids, dx, dy)

@@ -1,7 +1,9 @@
 % function MAIN_Mushiake()
 %MAIN_MUSHIAKE Run the Mushiake AY 2-level maze experiment with reusable pipelines.
 
-rng(3);
+print_main_dependency_disclaimer(mfilename, {'HAI_LANGUAGE', 'TrialBox', 'SPM'});
+
+rng(3); % For reproducibility of the trial seeds, which are saved and reused independently of the main RNG state.
 nReps               = 1;
 randsReps           = randi(2^9, nReps, 1);
 saveRootDir         = '~/TESTS/HAI_SEQUENCES/Mushiake/';
@@ -29,8 +31,8 @@ runPms.trialRunner              = 'run_mushiake_trial';
 runPms.goalStates               = [8, 4, 14, 18];
 runPms.mazeIndices              = [1, 1, 1, 1];
 runPms.sentenceId               = 0;
-runPms.obsNoise                 = 0.1;
-runPms.stateNoise               = 0.1;
+runPms.obsNoise                 = 0;0.1;
+runPms.stateNoise               = 0;0.1;
 runPms.nGoToTargets             = 5; % U D L R S
 runPms.nSteps                   = 4;
 runPms.nHiddenFactors           = 2;
@@ -155,17 +157,17 @@ sampleFRPms.firingRateTimeOffset = 0;
 sampleFRPms.epochLabels     = cell(0,0);
 sampleFRPms.epochFractions  = ones(1, numel(sampleFRPms.epochLabels)) / numel(sampleFRPms.epochLabels);
 sampleFRPms.thresh          = eps;
-sampleFRPms.smooth          = 15; % Preserve the raw xn trajectory in the plotted firing rates.
+sampleFRPms.smooth          = 20; % Preserve the raw xn trajectory in the plotted firing rates.
 sampleFRPms.noise           = 0;
-sampleFRPms.jitter          = 0;
-sampleFRPms.offset          = 0.001;
+sampleFRPms.jitter          = 0.01;
+sampleFRPms.offset          = 0.002;
 sampleFRPms.asim            = false;
 sampleFRPms.jitterAmplitude = 0;
-sampleFRPms.nPoints         = 8;
+sampleFRPms.nPoints         = 7;
 sampleFRPms.firingRateFirstTimeOverride = [];
 sampleFRPms.dstFiringRate   = [0.2, 0.05];
 sampleFRPms.firingRateSectorTime = 0:0.01:1;
-sampleFRPms.firingRateXLim = [0, 1.02];
+sampleFRPms.firingRateXLim = [-0.02, 1.02];
 
 sampleRasterPms = plot_sequence_rasterParams();
 sampleRasterPms.ifplot = ifplot;
@@ -183,29 +185,30 @@ sampleRasterPms.rasterKeepActions = resolve_mushiake_plot_actions(runPms.actions
 sampleRasterPms.rasterKeepEpochIndices = 1:(runPms.nSteps - 1);
 
 %sampleRasterPms.rasterShowStayInTitle = fullS;
-sampleRasterPms.dstRaster       = [0.15, 0.05];
+sampleRasterPms.dstRaster       = [0.15, 0.05]; %
 sampleRasterPms.nEpochsRaster   = numel(sampleRasterPms.rasterKeepEpochIndices);
 sampleRasterPms.rasterSectorTime= 0:0.01:1;
 sampleRasterPms.rasterXLim      = [0, 1.02];
 sampleRasterPms.epochLabels     = sampleEpochLabels(sampleRasterPms.rasterKeepEpochIndices);
 sampleRasterPms.epochFractions  = ones(1, numel(sampleRasterPms.epochLabels)) / numel(sampleRasterPms.epochLabels);
 sampleRasterPms.reset           = -1;  % Shift epoch indices by one to align with the original Mushiake plots, which show the first update during the first movement epoch. 
-sampleIndices = resolve_mushiake_sample_indices(data_trials, [1, 2, 3, 4]);
+sampleIndices                   = resolve_mushiake_sample_indices(data_trials, [1, 2, 3, 4]);
+hfgFigures                      = hfgMaze; % Start with the maze figures and add the sample trial FR and raster figures into the same struct for saving together.
+saveMDPs = [];
 for iSample = 1:numel(sampleIndices)
     sampleIndex = sampleIndices(iSample);
     sampleTrialNumber = data_trials(sampleIndex).sourceTrialIndex;
     [sampleMDP, mdpFile] = load_sequence_trial_mdp(lastSaveDir, sampleTrialNumber);
+    saveMDPs{end + 1} = sampleMDP; %#ok<AGROW>
     fprintf('Using sample MDP %s\n', mdpFile);
 
-    sampleFRPms.sampleTrial = sampleIndex;
+    sampleFRPms.sampleTrial     = sampleIndex;
     sampleRasterPms.sampleTrial = sampleIndex;
-
+% sampleRasterPms
     hfgSample = struct();
     [hfgSample, oldFRName] = plot_sequence_firing_rate(hfgSample, data_trials, sampleMDP, sampleIndex, sampleFRPms);
     [hfgSample, oldRasterName] = plot_sequence_raster(hfgSample, data_trials, sampleMDP, sampleIndex, sampleRasterPms);
-    %set_visible_axes_title(hfgSample.(oldRasterName), ...
-    %    resolve_mushiake_sample_title(sampleMDP, data_trials(sampleIndex), runPms.actions, fullS));
-
+% sampleRasterPms
     sampleFRFigureTag = sprintf('%s_%s_Trial%d', ...
         sampleFRPms.experimentLabel, sampleFRPms.figureTargetLabel, sampleTrialNumber);
     sampleRasterFigureTag = sprintf('%s_%s_Trial%d', ...
@@ -214,12 +217,15 @@ for iSample = 1:numel(sampleIndices)
     hfgSample = rmfield(hfgSample, oldFRName);
     hfgSample.(['Raster_' sampleRasterFigureTag]) = hfgSample.(oldRasterName);
     hfgSample = rmfield(hfgSample, oldRasterName);
-    if saveFigures
-        save_sequence_figures(hfgSample, ...
-            sprintf('SUMMARY_%s_%s', sampleFRPms.experimentLabel, ...
-            sampleFRPms.figureTargetLabel), ...
-            lastSaveDir);
-    end
+    hfgFigures = merge_struct_fields(hfgFigures, hfgSample);
+
+end
+
+if saveFigures
+    save_sequence_figures(hfgFigures, ...
+        sprintf('SUMMARY_%s_%s', sampleFRPms.experimentLabel, ...
+        sampleFRPms.figureTargetLabel), ...
+        lastSaveDir);
 end
 return
 %% PCA analysis
@@ -457,4 +463,15 @@ if isempty(symbols)
 end
 
 catNames = cellstr(symbols(:))';
+end
+
+function merged = merge_struct_fields(baseStruct, extraStruct)
+merged = baseStruct;
+if isempty(extraStruct)
+    return;
+end
+fieldNames = fieldnames(extraStruct);
+for fieldIndex = 1:numel(fieldNames)
+    merged.(fieldNames{fieldIndex}) = extraStruct.(fieldNames{fieldIndex});
+end
 end

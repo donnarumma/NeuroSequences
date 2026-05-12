@@ -1,6 +1,8 @@
 %function MAIN_Chen01_S1S2S3_Backward_Exp
 %MAIN_CHEN01_S1S2S3_BACKWARD_EXP Clean Chen01 backward main with generic plotting pipeline.
 
+print_main_dependency_disclaimer(mfilename, {'HAI_LANGUAGE', 'TrialBox', 'SPM'});
+
 %% Global settings
 rng(3);
 nReps                           = 1;
