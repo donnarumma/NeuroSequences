@@ -17,7 +17,8 @@ function hfg = Xie_Exp(targetIds, pathDir, ifplot)
 %
 % OUTPUT
 %   hfg     : struct containing the figure handle in hfg.Xie_Exp
-
+% EXAMPLE
+%   hfg = Xie_Exp(1:3);
 if nargin < 1
     targetIds = [];
 end

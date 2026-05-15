@@ -1,17 +1,21 @@
-function hfg = chenSensory()
+function hfg = Chen01_Forward(ifplot) 
 %% Hexagon + 6 3D lines with opening control
-figName = 'Sensory';
-ifplot = false;
+figName = 'Chen01_Forward';
+try
+    ifplot;
+catch
+    ifplot = false;
+end
 hfg.(figName)=figure('Visible',ifplot); clf; hold on; axis equal; box on
 set(gcf,'Color','w');
-p =[0,0,5000,450];
+p =[0,0,840,700];
 fs=16;
 rng(50);
 %-------------------------
 % USER PARAMETERS
 %-------------------------
 openFrac    = 0.1;%0.60;   % [0,1) fraction of the trajectory that is flat/common
-widenFactor = 0.1;    % >=0, how much they spread away from the trunk
+widenFactor = 2.0;    % >=0, how much they spread away from the trunk
 
 %-------------------------
 % Hexagon in 3D
@@ -19,8 +23,7 @@ widenFactor = 0.1;    % >=0, how much they spread away from the trunk
 nVert   = 6;
 R       = 1.0;
 hexCtr  = [0 0 0];
-% zHexs   = [3,6,9];
-zHexs   = [1,2,3];
+zHex    = 5;
 sig     = 0.4;
 
 angles  = linspace(0, 2*pi, nVert+1); angles(end) = [];
@@ -45,10 +48,10 @@ colors = [  ...
 % 3D “axonal” curves
 %-------------------------
 startPoint = [0 0 0];               % common origin
-dz          = -0.9;% -2;
-splitPoints = [zHexs(1)+dz, 0, 0; ...
-               zHexs(2)+dz, 0, 0; ...
-               2.7, 0, 0];           % where they start enlarging
+
+splitPoints = [1.0, 0, 0; ...
+               2.0, 0, 0; ...
+               3.0, 0, 0];           % where they start enlarging
 % lineColor  = [0.95 0.7 0];        % yellow–orange
 nSamples            = 200;
 
@@ -57,17 +60,20 @@ params.startPoint   = startPoint;
 params.nSamples     = nSamples;
 params.openFrac     = openFrac;
 params.widenFactor  = widenFactor;
-params.Extend       = 50;
-starts              = [1,50,50];
 % hfg.Backward        = figure;
+starts          = [1,1,1];
 
-% nTiles              = 3;
-% t                   = tiledlayout(nTiles, 1);
+nTiles              = 3;
+t                   = tiledlayout(nTiles, 1);
+t.Units             = 'normalized';
+t.Position          = [0.24, 0.10, 0.70, 0.82];
+axList              = gobjects(1, nTiles);
 for iPlot=1:3
-    % ax3D=nexttile;
-    
+    ax3D=nexttile;
+    axList(iPlot)       = ax3D;
+    params.start        = starts(iPlot);
     hold on;
-    zHex    = zHexs(iPlot);
+    
     vy      = hexCtr(1) + R*cos(angles) + rand(1,nVert)*sig;
     vz      = hexCtr(2) + R*sin(angles) + rand(1,nVert)*sig;
     vx      = zHex*ones(size(vy));
@@ -87,10 +93,8 @@ for iPlot=1:3
     params.splitPoint   = splitPoints(iPlot,:);
 
     params.lineColor    = colors(iPlot,:);
-    params.start        = starts(iPlot);
     plotPCAHexagonTraj(params);
-    ax3D=gca;
-    set(ax3D,'fontsize',fs);
+    set(gca,'fontsize',fs);
     % l=text(-1.5,0.4,2.5,sprintf('Memory-%d',iPlot), ...
     %     'HorizontalAlignment','right', ...
     %     'VerticalAlignment','middle', ...
@@ -124,56 +128,82 @@ for iPlot=1:3
     %     'VerticalAlignment','middle', ...
     %     'FontName','Helvetica', ...
     %     'FontSize',20,'FontWeight','bold');
+    text(ax3D, -0.17, 0.50, sprintf('Memory-%d',iPlot), ...
+        'Units', 'normalized', ...
+        'HorizontalAlignment', 'center', ...
+        'VerticalAlignment', 'middle', ...
+        'Rotation', 90, ...
+        'FontSize', 20, ...
+        'FontWeight', 'bold', ...
+        'Clipping', 'off');
     % Make sure future plotting goes back to 3D axes
     % axes(ax3D);
     % view(35,25);
     % axis off;
 end
-ax3D=gca;
-view(ax3D,-7,22);
-text(ax3D, -0.8,0,0+0.8, sprintf('Sensory'), ...
-    'HorizontalAlignment','right', ...
-    'VerticalAlignment','middle', ...
-    'Rotation',90, 'FontSize',20, ...
-    'FontWeight','bold', ...
-    'Clipping','off');
-    
-xlabel('time');
-hY          = ylabel('axis 1','Rotation',-70);
-% pos         = hY.Position;       % [x y z] in data units for 3D axes
-% pos(2)      = pos(2) - 0.0005;   % move right (closer to axis)
-% hY.Position = pos;
 
-hZ          = zlabel('axis 2');
-pos         = hZ.Position;       % [x y z] in data units for 3D axes
-pos(1)      = pos(1)+0.4;   % move right (closer to axis)
-hZ.Position = pos
-set(gca,'Clipping','off');
-ylim([-1,1]);
-zlim([-1,1]);
-xticks(0:5);
-xlim([0,5])    
+axBottom = axList(end);
+text(axBottom, 0.50, -0.16, 'time', ...
+    'Units', 'normalized', ...
+    'HorizontalAlignment', 'center', ...
+    'VerticalAlignment', 'top', ...
+    'FontSize', fs, ...
+    'Clipping', 'off');
+set(axBottom,'Clipping','off');
+    
 % S1,S2,S3,Delay (posizioni teoriche)
-% sPos = [sort(splitPoints(:,1)); max(splitPoints(:,1))+1.5]-0.5;%+0.7;
+sPos = [sort(splitPoints(:,1)); max(splitPoints(:,1))+1.5]-0.3;%+0.7;
 labels = {'S1','S2','S3','Delay'};
-sPos =[ -0.4,    0.6,    1.7,    2.8];
 for i = 1:4
-    % plot(sPos(i),-5-1.05,'k|','LineWidth',1.2);
-   spo= text(sPos(i)+1,0,-1.5, labels{i}, ...
-        'HorizontalAlignment','center', ...
-        'FontSize',24,'FontWeight','bol');
+   spo = text(axBottom, 0.18 + (i-1) * 0.23, -0.22, labels{i}, ...
+        'Units', 'normalized', ...
+        'HorizontalAlignment', 'center', ...
+        'VerticalAlignment', 'top', ...
+        'FontSize', 24, ...
+        'FontWeight', 'bold', ...
+        'Clipping', 'off');
    set(spo, 'Clipping', 'off');
-   set(gca,'Clipping', 'off');
 end
 set(hfg.(figName),'Position',p);
+
+axLabel = axes('Parent', hfg.(figName), ...
+    'Units', 'normalized', ...
+    'Position', [0, 0, 1, 1], ...
+    'Color', 'none', ...
+    'XLim', [0, 1], ...
+    'YLim', [0, 1], ...
+    'Visible', 'off', ...
+    'HitTest', 'off');
+
+text(axLabel, 0.045, 0.50, 'FORWARD', ...
+    'HorizontalAlignment', 'center', ...
+    'VerticalAlignment', 'middle', ...
+    'Rotation', 90, ...
+    'FontSize', 42, ...
+    'FontWeight', 'bold', ...
+    'Clipping', 'off');
+
+drawnow;
+axBottomPos = axBottom.Position;
+text(axLabel, axBottomPos(1) + 0.075, axBottomPos(2) - 0.14 * axBottomPos(4), 'axis 1', ...
+    'HorizontalAlignment', 'center', ...
+    'VerticalAlignment', 'middle', ...
+    'FontSize', fs, ...
+    'Clipping', 'off');
+text(axLabel, axBottomPos(1) + 0.03, axBottomPos(2) + 0.62 * axBottomPos(4), 'axis 2', ...
+    'HorizontalAlignment', 'center', ...
+    'VerticalAlignment', 'middle', ...
+    'Rotation', 90, ...
+    'FontSize', fs, ...
+    'Clipping', 'off');
+
 if ~ifplot
     fprintf('Step 6. save some plots\n')
-    % path_dir                    = '~/TESTS/HAI_LANGUAGE/SEQUENCES/FIG4/';
     path_dir                    = '/TESTS/HAI_SEQUENCES/Chen01/';
-    description                 = figName;
-    save_dir                    = [path_dir description '/'];
+    % description                 = figName;
+    % save_dir                    = [path_dir description '/'];
     par.hfigPrint               = hfigPrintParams();
-    par.hfigPrint.pdf_file      = [path_dir '/' description '.pdf'];
+    % par.hfigPrint.pdf_file      = [path_dir '/' description '.pdf'];
     par.hfigPrint.save_dir      = path_dir; 
     hfigPrint(hfg,par.hfigPrint)
 end
