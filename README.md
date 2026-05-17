@@ -41,7 +41,7 @@ These are the maintained entry points for running batches, collecting trial resu
 These scripts are not model simulations. They are used to reproduce or sketch figure panels inspired by published experimental papers. In other words:
 
 - the `MAIN_*_Exp.m` files are the computational-model simulation entry points
-- the `Chen*.m` / `Xie*.m` figure scripts are paper-style visualization helpers
+- the `Chen*.m` / `Xie*.m` / `Mushiake*.m` figure scripts are paper-style visualization helpers
 
 They are useful for reproducing target layouts, cue panels, or decoding-style schematics, but they are not part of the generative-model simulation pipeline.
 
@@ -53,6 +53,7 @@ Current figure-only scripts include:
 - `Chen/Chen01_Exp.m`
 - `Chen/Chen02_FwdBwd.m`
 - `Chen/Chen02_Exp.m`
+- `Mushiake/Mushiake_Spikes.m`
 - `Xie/Xie_Exp.m`
 - `Xie/Xie_Target.m`
 - `Xie/Xie_Exagons.m`
@@ -217,12 +218,12 @@ Make sure these dependencies are on the MATLAB path before running the mains.
 
 - `MAIN_*_Exp.m`
   - maintained MATLAB entry points for running the computational model, collecting saved trials, extracting readouts, and generating simulation-derived plots
-- `Chen*.m`, `Xie*.m`
+- `Chen*.m`, `Xie*.m`, `Mushiake*.m`
   - figure-construction scripts used to recreate panels resembling published data figures
 - `legacy/MAIN_*`
   - older entry points retained for reference or comparison
 
-If you want to run the model, start from one of the maintained `MAIN_*_Exp.m` files. If you want to recreate a paper-style schematic or target panel, use the corresponding `Chen*.m` or `Xie*.m` figure script.
+If you want to run the model, start from one of the maintained `MAIN_*_Exp.m` files. If you want to recreate a paper-style schematic or target panel, use the corresponding `Chen*.m`, `Xie*.m`, or `Mushiake*.m` figure script.
 
 ## Outputs
 
