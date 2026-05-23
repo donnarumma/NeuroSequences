@@ -1,8 +1,8 @@
-function hfg = Chen_Exp(targetGrid, pathDir, ifplot)
+function hfg = Chen01_Exp(targetGrid, pathDir, ifplot)
 %CHEN_EXP Generate a two-row target-sequence figure in the Xie_Exp style.
 %
-% hfg = Chen_Exp(targetGrid, pathDir, ifplot)
-% hfg = Chen_Exp(pathDir, ifplot)
+% hfg = Chen01_Exp(targetGrid, pathDir, ifplot)
+% hfg = Chen01_Exp(pathDir, ifplot)
 %
 % The figure is arranged as a simple 2x5 grid. Each row contains S1, S2,
 % S3, Delay, and a text panel rendered in the Xie_Exp style. Direction
@@ -19,7 +19,8 @@ function hfg = Chen_Exp(targetGrid, pathDir, ifplot)
 % OUTPUT
 %   hfg        : struct containing the figure handle in hfg.Chen_Exp
 % EXAMPLE
-%   hfg = Chen_Exp([1 2 3 0; 3 2 1 0]);
+%   hfg = Chen01_Exp([1 2 3 0; 3 2 1 0]); % ABC in forward and backward order, then Delay panel
+%   hfg = Chen01_Exp([1 2 0 0; 2 1 0 0]); % AB in forward and backward order, with no target panel in S3, then Delay panel
 if nargin < 1
     targetGrid = [];
 end
@@ -65,26 +66,27 @@ if ifplot
 end
 
 hfg = struct();
-hfg.Chen_Exp = figure( ...
+
+ChenFig = figure( ...
     'Visible', visibleFlag, ...
     'Color', 'w', ...
     'Name', 'Chen_Exp_Targets', ...
     'Position', [80, 50, 2500, 980]);
 
-layout = tiledlayout(hfg.Chen_Exp, 2, 5, ...
+layout = tiledlayout(ChenFig, 2, 5, ...
     'TileSpacing', 'loose', ...
     'Padding', 'compact');
-hfg.layout = layout;
+% hfg.layout = layout;
 layout.Units = 'normalized';
 layout.Position = [0.15, 0.06, 0.83, 0.88];
 
 for iRow = 1:2
     for iCol = 1:4
         ax = nexttile(layout, (iRow - 1) * 5 + iCol);
-        set(hfg.Chen_Exp, 'CurrentAxes', ax);
+        set(ChenFig, 'CurrentAxes', ax);
 
         par = struct();
-        par.hfig = hfg.Chen_Exp;
+        par.hfig = ChenFig;
         par.labels = labels;
         par.target = targetGrid(iRow, iCol);
         plotCircles(par);
@@ -103,7 +105,7 @@ for iRow = 1:2
     axText = nexttile(layout, iRow * 5);
     add_saccades_to_panel(axText, build_target_text(targetGrid(iRow, :)), saccadeFontSize);
 end
-
+hfg.Chen01_Exp = ChenFig;
 if ~ifplot
     assert_hfigprint_dependency();
     pathDir = expanduser_local(pathDir);
@@ -115,7 +117,7 @@ if ~ifplot
     end
 
     printPms = hfigPrintParams();
-    printPms.pdf_file = fullfile(pathDir, 'Chen_Exp.pdf');
+    % printPms.pdf_file = fullfile(pathDir, 'Chen01_Exp.pdf');
     printPms.save_dir = pathDir;
     hfigPrint(hfg, printPms);
 end
@@ -189,7 +191,7 @@ function assert_hfigprint_dependency()
 if exist('hfigPrint', 'file') ~= 2 || exist('hfigPrintParams', 'file') ~= 2
     error('Chen_Exp:MissingDependency', ...
         ['hfigPrint and hfigPrintParams are required on the MATLAB path. ' ...
-         'Run setup_HAI_DEV or add the relevant utilities folder first.']);
+         'add HAI_LANGUAGE git or add the relevant utilities folder first.']);
 end
 end
 
