@@ -113,6 +113,7 @@ switch labelsmode
             labels{iRow, iCol} = sprintf('S_{%d%d}', iRow, iCol);
         end
     end
+    labels(~MAZE) = {''};
     case 2 %% 1:K
     labels(~MAZE)   = {''};
     labels=labels';

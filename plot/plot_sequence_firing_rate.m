@@ -15,6 +15,20 @@ else
     data_plot.tPopFR = data_plot.tPopFR + pms.firingRateTimeOffset;
 end
 
+if ~isempty(pms.firingRateKeepTimeMax)
+    keepTime = data_plot.tPopFR <= pms.firingRateKeepTimeMax;
+    if any(keepTime)
+        data_plot.tPopFR = data_plot.tPopFR(keepTime);
+        data_plot.popFR = data_plot.popFR(:, keepTime);
+        if isfield(data_plot, 'labEpochs') && numel(data_plot.labEpochs) == numel(keepTime)
+            data_plot.labEpochs = data_plot.labEpochs(keepTime);
+        end
+        if pms.firingRateNormalizeTimeAfterCrop
+            data_plot.tPopFR = normalize_sequence_time(data_plot.tPopFR);
+        end
+    end
+end
+
 pms.dst = pms.dstFiringRate;
 pms.trials = sampleIndex;
 pms.reduce = false;
@@ -37,9 +51,17 @@ if ~isempty(pms.epochLabels)
     plot_sectors(Xtime, fractions, pms.epochLabels, pms.dst, true);
 end
 apply_sequence_axis_limits(gca, pms.firingRateXLim, [-0.1, 5.15]);
-try 
-    title (['Firing Rate: ' data_plot.trialLabel(1:end-1)]); 
-catch 
+try
+    if isfield(pms, 'firingRateTitle') && ~isempty(pms.firingRateTitle)
+        titleInterpreter = 'none';
+        if isfield(pms, 'firingRateTitleInterpreter') && ~isempty(pms.firingRateTitleInterpreter)
+            titleInterpreter = pms.firingRateTitleInterpreter;
+        end
+        title(pms.firingRateTitle, 'Interpreter', titleInterpreter);
+    else
+        title(['Firing Rate: ' data_plot.trialLabel(1:end-1)]);
+    end
+catch
 end
 figureName = ['FiringRate_Trial' num2str(sampleIndex) pms.imnm];
 hLegend = findobj(hfg.(figureName), 'Type', 'Legend');
@@ -68,6 +90,20 @@ if isempty(pms.epochFractions)
     fractions = ones(1, numel(pms.epochLabels)) / numel(pms.epochLabels);
 else
     fractions = pms.epochFractions;
+end
+end
+
+function timeVector = normalize_sequence_time(timeVector)
+% Map the retained firing-rate support back to the full [0, 1] display interval.
+
+if numel(timeVector) < 2
+    return;
+end
+
+timeMin = min(timeVector);
+timeMax = max(timeVector);
+if timeMax > timeMin
+    timeVector = (timeVector - timeMin) / (timeMax - timeMin);
 end
 end
 

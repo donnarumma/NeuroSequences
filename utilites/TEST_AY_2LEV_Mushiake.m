@@ -9,6 +9,16 @@ goal_state  = par.goal_state;
 isfix       = par.isfix;
 irng        = par.irng;
 iMushiake   = par.iMushiake;
+addSingleStepRecognitionLevel = true;
+singleStepRecognitionMode = 'diagonal';
+
+if isfield(par, 'addSingleStepRecognitionLevel') && ~isempty(par.addSingleStepRecognitionLevel)
+    addSingleStepRecognitionLevel = par.addSingleStepRecognitionLevel;
+end
+
+if isfield(par, 'singleStepRecognitionMode') && ~isempty(par.singleStepRecognitionMode)
+    singleStepRecognitionMode = par.singleStepRecognitionMode;
+end
 
 dictionary                          = 'DICTIONARY_AY_2LEV_Mushiake';
 langparams                          = HAI_DefaultParams(dictionary);
@@ -81,4 +91,9 @@ langparams.level(1).C{2}            = zeros(size(TestMaze.ActionsB,1),1);
 langparams.level(1).C{2}(5)         = -8;
 
 MDP                                 = run_hai_trial(langparams, dictionary);
+if addSingleStepRecognitionLevel
+    MDP = mushiake_attach_single_step_recognition_level(MDP, struct( ...
+        'enabled', true, ...
+        'mode', singleStepRecognitionMode));
+end
 MDP.iMushiake                       = iMushiake;

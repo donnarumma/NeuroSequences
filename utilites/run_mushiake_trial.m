@@ -42,5 +42,13 @@ if isfield(pms, 'stateNoise') && ~isempty(pms.stateNoise)
     trialParams.stateNoise = pms.stateNoise;
 end
 
+if isfield(pms, 'addSingleStepRecognitionLevel') && ~isempty(pms.addSingleStepRecognitionLevel)
+    trialParams.addSingleStepRecognitionLevel = pms.addSingleStepRecognitionLevel;
+end
+
+if isfield(pms, 'singleStepRecognitionMode') && ~isempty(pms.singleStepRecognitionMode)
+    trialParams.singleStepRecognitionMode = pms.singleStepRecognitionMode;
+end
+
 MDP = TEST_AY_2LEV_Mushiake(trialParams);
 end

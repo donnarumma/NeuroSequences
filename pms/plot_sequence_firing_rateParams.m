@@ -27,6 +27,8 @@ pms.firingRateKeepEpochIndices = [];            % Optional subset of epoch indic
 pms.firingRateLegendUnique = false;             % If true, collapse duplicate firing-rate legend labels when supported by the selected plotter.
 pms.firingRateLegendNumColumns = [];            % Optional explicit number of legend columns for the firing-rate plot; empty uses a compact automatic choice.
 pms.firingRateFirstTimeOverride = [];           % Optional override applied to timePotentials(1) in firing-rate plotters that support it.
+pms.firingRateKeepTimeMax = [];                 % Optional max tPopFR value kept before plotting.
+pms.firingRateNormalizeTimeAfterCrop = false;   % If true, remap the kept tPopFR interval to [0, 1].
 
 pms.iFactor             = 1;                    % Hidden factor used by plotting helpers.
 pms.Nnr                 = 4;                    % Number of duplicate neurons per population.

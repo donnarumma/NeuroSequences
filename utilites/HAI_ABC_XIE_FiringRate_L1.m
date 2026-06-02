@@ -107,8 +107,10 @@ end
         epochColorId = ceil(iNeuron / nActions); % one color per temporal block
         actionId    = actionIds(iNeuron);  % [1-nActions]
         % marker depends on the action
-        marker      = markers{actionId};
-        line_style  = line_styles{actionId}; 
+        markerId    = mod(actionId - 1, numel(markers)) + 1;
+        lineStyleId = mod(actionId - 1, numel(line_styles)) + 1;
+        marker      = markers{markerId};
+        line_style  = line_styles{lineStyleId};
         % Adjust color brightness based on final firing rate when requested.
         if isfield(par, 'firingRateUseBrightnessScaling') && ~par.firingRateUseBrightnessScaling
             brightness = 1;
@@ -167,7 +169,10 @@ end
         legendHandles = legendHandles(uniqueIndex);
     end
     if ~isempty(legendHandles)
-        legend(legendHandles, legendLabels, 'location', 'eastoutside', 'AutoUpdate', 'off');
+        hLegend = legend(legendHandles, legendLabels, 'location', 'eastoutside', 'AutoUpdate', 'off');
+        if isfield(par, 'firingRateLegendFontSize') && ~isempty(par.firingRateLegendFontSize)
+            hLegend.FontSize = par.firingRateLegendFontSize;
+        end
     end
     delete(pl(~toplot));
     delete(pl3(~toplot));
@@ -181,4 +186,5 @@ end
     set(gca,'fontsize',16)
     p=[0,0,1000,600];
     set(hfg.(nmFR),'Position',p);
+end
 end
