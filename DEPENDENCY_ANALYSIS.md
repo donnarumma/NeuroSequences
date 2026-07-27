@@ -1,68 +1,52 @@
 # NeuroSequences Dependency Analysis
 
-**Analysis date:** May 10, 2026  
-**Repository:** `~/tools/NeuroSequences`
-
-## Executive Summary
-
-The repository currently contains:
-
-- 6 active `MAIN_*_Exp.m` simulation entry points
-- 4 figure-only reproduction scripts
-- 3 external dependency families
-  - `HAI_LANGUAGE`
-  - `TrialBox`
-  - `SPM`
-
-The maintained simulation workflow is now built around:
-
-- `run_sequence` or `run_sensors`
-- `Collect_Trial_Results` or `Collect_Sensor_Results`
-- `extract_sequence_trials`
-- `plot_sequence_firing_rate`
-- `plot_sequence_raster`
-- `BETA_pcaSpace`
-
-The older `SAMPLE_Sequence` / `BETA_pca` path is no longer the primary path for the active Chen and Xie mains. `Mushiake` still contains a legacy PCA block, but that block is currently inactive because the script returns earlier.
+This document maps the public simulation entry points to the MATLAB modules
+they use. It focuses on executable code structure rather than project notes.
 
 ## 1. Entry Points
 
-### Active model simulations
+### Model simulation mains
 
-| File | Family | Purpose |
-|------|--------|---------|
-| `Chen/MAIN_Chen01_S1S2S3_Forward_Exp.m` | Chen | Forward-only simulation across 1D, 2D, 3D sequence families |
-| `Chen/MAIN_Chen01_S1S2S3_Backward_Exp.m` | Chen | Backward-only simulation across 1D, 2D, 3D sequence families |
-| `Chen/MAIN_Chen01_S1S2S3_Sensors_Exp.m` | Chen | Sensory / neutral control branch |
-| `Chen/MAIN_Chen02_S2_FwBw_Exp.m` | Chen | 2D forward/backward branch with policy-type priors |
-| `Xie/MAIN_Xie_S3_Forward_Exp.m` | Xie | 3D forward-only branch |
-| `Mushiake/MAIN_Mushiake_Exp.m` | Mushiake | AY maze branch using the sensor runner |
+The model is run from the `MAIN_*_Exp*.m` scripts.
+
+| File | Family | Role |
+|------|--------|------|
+| `Chen/MAIN_Chen01_S1S2S3_Forward_Exp.m` | Chen01 | Forward 1D/2D/3D sequence simulation |
+| `Chen/MAIN_Chen01_S1S2S3_Backward_Exp.m` | Chen01 | Backward 1D/2D/3D sequence simulation |
+| `Chen/MAIN_Chen01_S1S2S3_Sensors_Exp.m` | Chen01 | Sensory / neutral control simulation |
+| `Chen/MAIN_Chen02_S2_FwBw_Exp.m` | Chen02 | 2D forward/backward simulation with policy-type priors |
+| `Chen/MAIN_Chen02_S2_FwBw_Exp_Supp.m` | Chen02 | Supplementary 2D forward/backward simulation with equal policy weights |
+| `Xie/MAIN_Xie_S3_Forward_Exp.m` | Xie | 3D forward sequence simulation |
+| `Xie/MAIN_Xie_S3_Forward_Exp_Supp.m` | Xie | Supplementary 3D forward simulation and readout configuration |
+| `Mushiake/MAIN_Mushiake_Exp.m` | Mushiake | AY maze simulation with sample maze, firing-rate, and raster plots |
+| `Mushiake/MAIN_Mushiake_Exp_Supp.m` | Mushiake | Supplementary AY maze simulation with outer/inner factor readouts |
 
 ### Figure-only scripts
 
-These do not run the model. They generate printed or stylized figure reproductions.
+These scripts use MATLAB plotting primitives to recreate task schematics or
+published-data-style panels. They do not call the model runners.
 
 | File | Role |
 |------|------|
-| `Chen/chenForward.m` | forward figure sketch / reproduction |
-| `Chen/chenBackward.m` | backward figure sketch / reproduction |
-| `Chen/chenSensory.m` | sensory figure sketch / reproduction |
-| `Xie/xie.m` | Xie polygon-style figure reproduction |
+| `Chen/Chen01_Forward.m` | Chen01 forward figure reproduction |
+| `Chen/Chen01_Backward.m` | Chen01 backward figure reproduction |
+| `Chen/Chen01_Sensory.m` | Chen01 sensory figure reproduction |
+| `Chen/Chen01_Exp.m` | Chen01 task schematic |
+| `Chen/Chen02_FwdBwd.m` | Chen02 forward/backward panel reproduction |
+| `Chen/Chen02_Exp.m` | Chen02 task schematic |
+| `Xie/Xie_Exp.m` | Xie task schematic |
+| `Xie/Xie_Target.m` | Xie target drawing helper |
+| `Xie/Xie_Exagons.m` | Xie hexagon-style plotting helper |
+| `Mushiake/Mushiake_Spikes.m` | Mushiake spike-panel reproduction |
 
 ## 2. External Dependencies
 
 ### HAI_LANGUAGE
 
-**Repository:** `https://github.com/donnarumma/HAI_LANGUAGE`
+Repository: <https://github.com/donnarumma/HAI_LANGUAGE>
 
-Main roles in this project:
-
-- default HAI parameter setup
-- hierarchical active-inference execution
-- MDP-to-firing-rate helper functions
-- rate extension and plotting-side helpers
-
-Examples used directly or indirectly:
+Used for hierarchical active-inference setup, MDP execution helpers, and
+firing-rate utilities. Commonly used functions include:
 
 - `HAI_DefaultParams`
 - `HAI_initialiseParams`
@@ -72,86 +56,123 @@ Examples used directly or indirectly:
 
 ### TrialBox
 
-**Repository:** `https://github.com/donnarumma/TrialBox`
+Repository: <https://github.com/donnarumma/TrialBox>
 
-Main role in this project:
+Used for parameter resolution and figure export. Commonly used functions
+include:
 
-- parameter resolution via `resolveFunctionParams`
-
-This is used extensively by the newer parameterized helper functions and plotting utilities.
+- `resolveFunctionParams`
+- `hfigPrint`
+- `hfigPrintParams`
 
 ### SPM
 
-**Project:** `https://www.fil.ion.ucl.ac.uk/spm/`
+Project: <https://www.fil.ion.ucl.ac.uk/spm/>
 
-Main role in this project:
-
-- active-inference / MDP solver support and utility functions
-
-Examples used in the solver path:
+Used for active-inference / MDP utilities and variational updates. Commonly used
+functions include:
 
 - `spm_MDP_check`
 - `spm_MDP_VB_X`
 - `spm_dot`
 - `spm_softmax`
 
-## 3. Core Internal Modules
+## 3. Core Project Modules
 
-### Execution layer
-
-| File | Role |
-|------|------|
-| `engine/run_sequence.m` | execute one generic sequence trial |
-| `engine/run_sensors.m` | execute one sensor-style trial |
-| `engine/build_sequence_model.m` | build the static sequence model for a batch |
-| `engine/VB_MDP_X.m` | main variational solver wrapper / implementation |
-
-### Collection layer
+### Model construction and execution
 
 | File | Role |
 |------|------|
-| `utilites/Collect_Trial_Results.m` | rebuild collected sequence trial summaries from saved `MDP_*` files |
-| `utilites/Collect_Sensor_Results.m` | rebuild collected sensor-style trial summaries |
-| `utilites/build_mushiake_trial_data.m` | Mushiake readout reconstruction |
-| `utilites/build_sensor_trial_data.m` | sensor readout reconstruction |
+| `pms/run_sequenceParams.m` | Defaults for generic sequence simulations |
+| `pms/run_sensorsParams.m` | Defaults for sensor-style simulations |
+| `engine/build_sequence_model.m` | Builds the static sequence model for sequence batches |
+| `engine/run_sequence.m` | Executes a generic sequence trial |
+| `engine/run_sensors.m` | Executes a sensor-style trial |
+| `engine/VB_MDP_X.m` | Variational solver wrapper / implementation |
+| `utilites/run_mushiake_trial.m` | Custom Mushiake trial runner used by the sensor runner |
+| `utilites/TEST_AY_2LEV_Mushiake.m` | Builds and runs the Mushiake two-level maze MDP |
+| `utilites/mushiake_attach_single_step_recognition_level.m` | Adds the inner one-step recognition level used by supplementary Mushiake readouts |
 
-### Readout preparation
-
-| File | Role |
-|------|------|
-| `utilites/extract_sequence_trials.m` | maintained loader / expander for plotting-side `data_trials` |
-| `pms/extract_sequence_data_trialsParams.m` | defaults for readout extraction and spike generation |
-| `utilites/firingRatesToSpikes.m` | centralized spike generator with legacy and newer modes |
-| `utilites/getCosineTuning.m` | select tuning function, tuning parameters, and default spike mode |
-| `utilites/cosineTuneCircularBlocks.m` | block-circular tuning implementation |
-
-### Plotting and geometry
+### Trial description and persistence
 
 | File | Role |
 |------|------|
-| `plot/plot_sequence_firing_rate.m` | maintained sample firing-rate wrapper |
-| `plot/plot_sequence_raster.m` | maintained sample raster wrapper |
-| `plot/tileNeuronPolarByTypes.m` | tiled polar plots by symbolic step |
-| `plot/BETA_pcaSpace.m` | maintained PCA / geometry analysis path |
-| `pms/BETA_pcaSpaceParams.m` | self-contained defaults for `BETA_pcaSpace` |
+| `utilites/build_batch_description.m` | Creates batch labels from experiment parameters |
+| `utilites/build_sequence_trial_description.m` | Creates sequence trial labels |
+| `utilites/build_sensor_trial_description.m` | Creates sensor trial labels |
+| `utilites/save_batch_metadata.m` | Saves batch metadata |
+| `utilites/get_or_create_trial_seeds.m` | Stores/reuses trial seeds |
+| `utilites/find_existing_trial_file.m` | Locates reusable saved trials |
+| `utilites/load_sequence_trial_mdp.m` | Loads saved MDP trials for plotting |
 
-## 4. Shared Sequence Pipeline
+### Collection and readout preparation
 
-This is the common path for:
+| File | Role |
+|------|------|
+| `utilites/Collect_Trial_Results.m` | Rebuilds collected sequence summaries from saved `MDP_*` files |
+| `utilites/Collect_Sensor_Results.m` | Rebuilds collected sensor / maze summaries |
+| `utilites/extract_sequence_trials.m` | Main plotting-side loader for sequence summaries |
+| `utilites/extract_sequence_data_trials.m` | Loader for preprocessed readouts and sensor-style summaries |
+| `utilites/build_sensor_trial_data.m` | Sensor readout reconstruction |
+| `utilites/build_mushiake_trial_data.m` | Mushiake readout reconstruction, including outer and inner levels |
+| `pms/extract_sequence_data_trialsParams.m` | Defaults for readout extraction and spike generation |
+
+### Tuning and spike generation
+
+| File | Role |
+|------|------|
+| `utilites/getCosineTuning.m` | Selects tuning function, tuning parameters, and default spike mode |
+| `utilites/cosineTune.m` | Legacy cosine tuning |
+| `utilites/cosineTuningStep.m` | Step-wise cosine tuning |
+| `utilites/cosineTuneCircularBlocks.m` | Circular-block tuning used by maintained mains |
+| `pms/cosineTuneCircularBlocksParams.m` | Defaults for circular-block tuning |
+| `utilites/firingRatesToSpikes.m` | Central spike generator |
+
+Supported spike modes include:
+
+| Mode | Description |
+|------|-------------|
+| `legacy` | Original dense spike-generation rule |
+| `legacy_logit_noise` | Logit/noise variant of the original rule |
+| `thresholded_bernoulli` | Sparse thresholded Bernoulli spikes |
+| `thresholded_refractory` | Thresholded Bernoulli spikes with refractory silence |
+
+### Plotting
+
+| File | Role |
+|------|------|
+| `plot/plot_sequence_firing_rate.m` | Sample firing-rate wrapper |
+| `plot/plot_sequence_raster.m` | Sample raster wrapper |
+| `utilites/HAI_ABC_XIE_FiringRate_L1.m` | Firing-rate renderer used by Chen/Xie/Mushiake sample plots |
+| `utilites/HAI_ABCDEF_3LEV_SampleRaster.m` | Raster renderer for ABCDEF-style sequence plots |
+| `plot/HAI_Mushiake_SampleRaster.m` | Mushiake raster renderer with factor/level-specific labels and colors |
+| `plot/tileNeuronPolarByTypes.m` | Tiled polar summaries by sequence type |
+| `plot/tileNeuronPolars6x3.m` | Xie-style tiled polar summary |
+| `plot/BETA_pcaSpace.m` | PCA / geometry analysis path |
+| `pms/BETA_pcaSpaceParams.m` | Defaults for PCA / geometry plots |
+| `plot/plot_MAZE.m` | Mushiake maze schematic and action-path plotter |
+| `utilites/set_visible_axes_title.m` | Helper for figure titles after plot creation |
+
+## 4. Generic Sequence Pipeline
+
+Used by:
 
 - `Chen/MAIN_Chen01_S1S2S3_Forward_Exp.m`
 - `Chen/MAIN_Chen01_S1S2S3_Backward_Exp.m`
 - `Chen/MAIN_Chen02_S2_FwBw_Exp.m`
+- `Chen/MAIN_Chen02_S2_FwBw_Exp_Supp.m`
 - `Xie/MAIN_Xie_S3_Forward_Exp.m`
+- `Xie/MAIN_Xie_S3_Forward_Exp_Supp.m`
 
-### Dependency chain
+Dependency chain:
 
 ```text
-MAIN_*_Exp
+MAIN_*_Exp*.m
 -> run_sequenceParams
 -> build_batch_description
 -> build_sequence_model
--> save_batch_metadata / get_or_create_trial_seeds
+-> save_batch_metadata
+-> get_or_create_trial_seeds
 -> build_sequence_trial_description
 -> run_sequence
 -> Collect_Trial_Results
@@ -159,89 +180,30 @@ MAIN_*_Exp
 -> extract_sequence_trials
 -> plot_sequence_firing_rate
 -> plot_sequence_raster
--> tileNeuronPolarByTypes
+-> tileNeuronPolarByTypes / tileNeuronPolars6x3
 -> BETA_pcaSpace
 ```
 
-### Important notes
+## 5. Chen Simulations
 
-- `extract_sequence_trials` is the maintained readout-preparation entry point.
-- `getCosineTuning` now controls both tuning choice and the default spike mode returned to the mains.
-- The active mains typically use `PopRates` for polar plots and PCA summaries.
-- `BETA_pcaSpace` is the maintained PCA path for these branches.
+### Chen01 forward and backward
 
-## 5. Chen01 Forward / Backward
+`Chen/MAIN_Chen01_S1S2S3_Forward_Exp.m` and
+`Chen/MAIN_Chen01_S1S2S3_Backward_Exp.m` run 1D, 2D, and 3D sequence families.
+The forward main selects the forward 3D type mask; the backward main selects the
+backward 3D type mask. Both use the shared sequence pipeline and generate:
 
-### `Chen/MAIN_Chen01_S1S2S3_Forward_Exp.m`
+- sample firing-rate plots
+- sample raster plots
+- polar summaries by symbolic rank
+- PCA / geometry summaries through `BETA_pcaSpace`
 
-Key settings:
+### Chen01 sensors
 
-- `include3D = true`
-- `include2D = true`
-- `include1D = true`
-- `typeMask3D = [1 0 0 0 0 0]`
+`Chen/MAIN_Chen01_S1S2S3_Sensors_Exp.m` uses the sensor runner rather than
+`run_sequence`.
 
-Readout / plotting path:
-
-- `getCosineTuning(tunemode)`
-- `extract_sequence_trials`
-- sample firing-rate and raster plots
-- polar plots over `type1:type3`
-- `BETA_pcaSpace`
-
-### `Chen/MAIN_Chen01_S1S2S3_Backward_Exp.m`
-
-Same structure as forward, with:
-
-- `typeMask3D = [0 0 0 0 0 1]`
-
-It also uses the maintained `BETA_pcaSpace` path and sequence-style legacy compatibility settings for some `PcaTime` layout details.
-
-## 6. Chen02 Forward / Backward
-
-### `Chen/MAIN_Chen02_S2_FwBw_Exp.m`
-
-This main uses the same sequence pipeline, but with a different batch definition:
-
-- 2D families only
-- fixed minimum sequence length of 2
-- both forward and backward trial types
-- non-uniform `policyTypeWeights = [10, 1]`
-
-Extra dependency detail:
-
-- the collected batch is split into forward and backward subsets after collection
-- both subsets are passed separately to `BETA_pcaSpace`
-- the PCA branch uses `pcaNeuronSelectionMode = 'matched_step_blocks'`
-
-## 7. Xie Forward
-
-### `Xie/MAIN_Xie_S3_Forward_Exp.m`
-
-This is structurally the same maintained sequence path as the Chen01 forward branch, with Xie-specific figure and timing conventions.
-
-Key chain:
-
-```text
-MAIN_Xie_S3_Forward_Exp
--> run_sequenceParams
--> build_sequence_model
--> run_sequence
--> Collect_Trial_Results
--> getCosineTuning
--> extract_sequence_trials
--> plot_sequence_firing_rate / plot_sequence_raster
--> tileNeuronPolarByTypes
--> BETA_pcaSpace
-```
-
-## 8. Chen Sensors
-
-### `Chen/MAIN_Chen01_S1S2S3_Sensors_Exp.m`
-
-This branch differs from the generic sequence mains because it uses the sensor runner and preprocessed readouts.
-
-### Dependency chain
+Dependency chain:
 
 ```text
 MAIN_Chen01_S1S2S3_Sensors_Exp
@@ -251,130 +213,93 @@ MAIN_Chen01_S1S2S3_Sensors_Exp
 -> extract_sequence_trials(usePreprocessedPopFR = true)
 -> plot_sequence_firing_rate
 -> plot_sequence_raster
--> add_sensor_type_fields
 -> tileNeuronPolarByTypes
 -> BETA_pcaSpace
 ```
 
-### Important notes
+### Chen02 forward/backward
 
-- cosine-shaped sensor readouts are already assembled upstream during collection
-- `extract_sequence_trials(..., usePreprocessedPopFR = true)` extends those preprocessed population responses and generates `PopRates`, `firingRates`, and `Spikes`
-- the branch uses sensor-style compatibility settings in `BETA_pcaSpace`
-- symbolic fields such as `type1:type3` are reconstructed locally for the generic polar plotters
+`Chen/MAIN_Chen02_S2_FwBw_Exp.m` runs 2D forward and backward branches with
+policy-type priors. After collection, trials are split into forward and backward
+subsets for sample plots, polar plots, and PCA summaries.
 
-## 9. Mushiake
+`Chen/MAIN_Chen02_S2_FwBw_Exp_Supp.m` uses the same structural pipeline with
+equal forward/backward policy weights and supplementary plotting settings.
 
-### `Mushiake/MAIN_Mushiake_Exp.m`
+## 6. Xie Simulations
 
-This branch is the main exception in the repository.
+`Xie/MAIN_Xie_S3_Forward_Exp.m` runs a 3D forward-only sequence branch with
+Xie-specific timing and plotting conventions.
 
-### Active dependency chain
+`Xie/MAIN_Xie_S3_Forward_Exp_Supp.m` uses the same pipeline and adds
+supplementary tuning/readout settings. Both Xie mains generate:
+
+- sample firing-rate and raster plots
+- polar summaries for the three symbolic ranks
+- a 6-by-3 polar summary
+- PCA / geometry summaries through `BETA_pcaSpace`
+
+## 7. Mushiake Simulations
+
+`Mushiake/MAIN_Mushiake_Exp.m` runs the AY maze simulation through the sensor
+pipeline and a custom trial runner.
+
+Dependency chain:
 
 ```text
 MAIN_Mushiake_Exp
 -> run_sensorsParams
 -> run_sensors
 -> run_mushiake_trial
+-> TEST_AY_2LEV_Mushiake
 -> Collect_Sensor_Results
 -> build_mushiake_trial_data
 -> mushiake_apply_readout_preset
--> plot_mushiake_mazes
 -> extract_sequence_data_trials(usePreprocessedPopFR = true)
+-> plot_mushiake_mazes
 -> plot_sequence_firing_rate
 -> plot_sequence_raster
 ```
 
-### Important notes
+`Mushiake/MAIN_Mushiake_Exp_Supp.m` extends this path by plotting both factors
+and both readout levels:
 
-- `run_sensors` is reused, but trial execution is redirected through `run_mushiake_trial`
-- maze plotting is part of the main active path
-- sample plots use preprocessed Mushiake readouts
-- a legacy PCA block using `BETA_pca` still exists below an early `return`
-- because of that `return`, the active path currently does not execute PCA
+- factor 1: maze states
+- factor 2: actions
+- outer level: the parent low-level MDP readout
+- inner level: the single-step recognition readout attached under
+  `MDP.mdp(1).mdp`
 
-## 10. Tuning and Spike-Generation Dependencies
+The supplementary Mushiake path depends on:
 
-The newer mains rely on the combination:
+- `utilites/mushiake_attach_single_step_recognition_level.m`
+- `utilites/build_mushiake_trial_data.m`
+- `plot/HAI_Mushiake_SampleRaster.m`
 
-```text
-getCosineTuning
--> chosen cosine function
--> cosine parameter struct
--> default spikeGenerationMode
--> firingRatesToSpikes
-```
+## 8. Figure-Only Dependencies
 
-### Current maintained spike modes
-
-| Mode | Meaning |
-|------|---------|
-| `legacy` | original dense Bernoulli-like rule |
-| `legacy_logit_noise` | old alternative logit/noise rule |
-| `thresholded_bernoulli` | sparse thresholded Bernoulli spikes |
-| `thresholded_refractory` | thresholded Bernoulli with refractory silence |
-
-### Current maintained cosine modes
-
-| Mode | Main implementation |
-|------|---------------------|
-| no tuning | identity / empty function |
-| legacy cosine | `cosineTune` |
-| step cosine | `cosineTuningStep` |
-| circular blocks | `cosineTuneCircularBlocks` |
-
-## 11. Figure-Only Script Dependencies
-
-These scripts are lightweight compared with the simulation mains.
-
-### Chen figure reproductions
-
-- `Chen/chenForward.m`
-- `Chen/chenBackward.m`
-- `Chen/chenSensory.m`
-
-Typical direct dependencies:
-
-- `plotPCAHexagonTraj`
-- `hfigPrint`
-- basic MATLAB plotting functions
-
-They do not call:
-
-- `run_sequence`
-- `run_sensors`
-- `Collect_*`
-- `extract_sequence_trials`
-- `BETA_pcaSpace`
-
-### Xie figure reproduction
-
-- `Xie/xie.m`
-
-Typical direct dependencies:
-
-- `linspecer`
-- `hfigPrint`
-- basic MATLAB plotting functions
-
-This script is also figure-only and not connected to the model simulation pipeline.
-
-## 12. Practical Interpretation
-
-If the goal is:
-
-- to run the model
-  - start from one of the 6 `MAIN_*_Exp.m` files
-- to reproduce stylized publication-like figures without rerunning the model
-  - use `chenForward`, `chenBackward`, `chenSensory`, or `xie`
-
-If the goal is to follow the maintained analysis path, the most important functions to inspect are:
+Figure-only scripts depend on MATLAB graphics utilities and, when saving
+figures, `hfigPrint` from TrialBox. They do not call:
 
 - `run_sequence`
 - `run_sensors`
 - `Collect_Trial_Results`
 - `Collect_Sensor_Results`
 - `extract_sequence_trials`
-- `firingRatesToSpikes`
-- `getCosineTuning`
 - `BETA_pcaSpace`
+
+Use them to recreate visual panels, task layouts, target schematics, or
+published-data-style figures. Use the `MAIN_*_Exp*.m` files to run the model.
+
+## 9. Output Structure
+
+Simulation outputs are saved under `/TESTS/HAI_SEQUENCES/...` by default.
+Typical directories contain:
+
+- `MDP_*` trial files
+- collected `Collect_*` summaries
+- saved MATLAB figure handles
+- PDF / FIG outputs for firing-rate, raster, polar, maze, and PCA figures
+
+Batch metadata and trial seeds are saved so completed trials can be reused by
+subsequent runs.
