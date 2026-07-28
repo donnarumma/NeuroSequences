@@ -1,7 +1,15 @@
 # NeuroSequences
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21628749.svg)](https://doi.org/10.5281/zenodo.21628749)
+
 MATLAB code for running sequence-memory model simulations and generating
 model-derived figures inspired by experimental sequence tasks.
+
+Paper-final code for *Inferential planning in the frontal cortex*.
+
+GitHub repository: <https://github.com/donnarumma/NeuroSequences>
+Zenodo concept DOI: <https://doi.org/10.5281/zenodo.21628748>
+Zenodo version DOI (v1.0.0): <https://doi.org/10.5281/zenodo.21628749>
 
 The repository is organized around two kinds of files:
 
@@ -157,6 +165,15 @@ Before running the simulation mains, add these dependencies to the MATLAB path:
   <https://github.com/donnarumma/TrialBox>
 - `SPM`: active-inference / MDP solver support.
   <https://www.fil.ion.ucl.ac.uk/spm/>
+
+Software RRID records used for manuscript Key Resources Tables:
+
+- `MATLAB`: `RRID:SCR_001622`
+  - Product page: <https://www.mathworks.com/products/matlab.html>
+  - RRID resolver: <https://scicrunch.org/resolver/RRID:SCR_001622>
+- `SPM` / `SPM12`: `RRID:SCR_007037`
+  - SPM12 page: <https://www.fil.ion.ucl.ac.uk/spm/software/spm12/>
+  - RRID resolver: <https://scicrunch.org/resolver/RRID:SCR_007037>
 
 ## Outputs
 
